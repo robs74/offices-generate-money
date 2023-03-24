@@ -1,0 +1,19 @@
+include("include/office_money.txt");
+defineVariable(char, script);
+
+defineFunction(main, void)
+{
+	Script_SetContinuous(1);
+	Script_Exists("office_rub.txt", script);
+	if(script ? 1)
+	{
+		Script_DestroyByName("office_rub.txt");
+	}
+	Script_Exists("office_rubusd.txt", script);
+	if(script ? 1)
+	{
+		Script_DestroyByName("office_rubusd.txt");
+	}
+	Money(0.0, 1.0);
+	end();
+}

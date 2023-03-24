@@ -1,0 +1,39 @@
+include("SOVIETInstructions.txt");
+defineVariable(int, n);
+defineVariable(int, i);
+defineVariable(Building, building);
+defineVariable(int, day);
+defineVariable(int, year);
+defineVariable(int, START_YEAR);
+defineVariable(float, value_change_rub);
+defineVariable(float, value_change_usd);
+defineVariable(int, money);
+defineVariable(char, script);
+
+defineFunction(Money, void, float:rub, float:usd)
+{
+	START_YEAR = 1960;
+	InitConstants();
+	Building_GetNumberOfBuildings(n);
+	Date_GetCurrentDate_D365Y(day, year);
+	value_change_rub = 1.1 ^ (year - START_YEAR);
+	value_change_usd = 1.03 ^ (year - START_YEAR);
+	if (value_change_usd < 1)
+	{
+		value_change_rub = 1;
+		value_change_usd = 1;
+	}
+	for (i=0, i<n, i=i+1)
+	{
+		building.GetDataByIndex(i);
+		if(building.nType ? BUILDINGTYPE_CITYHALL)
+		{
+			money = building.nWorkersNum * value_change_rub * rub;
+			Money_AddRUB(money);
+			money = building.nWorkersNum * value_change_usd * usd;
+			Money_AddUSD(money);
+		}
+	}
+	Script_Sleep(4.0);
+	returnVoid();
+}
