@@ -1,14 +1,35 @@
 include("SOVIETInstructions.txt");
 defineVariable(int, n);
 defineVariable(int, i);
+defineVariable(int, j);
 defineVariable(Building, building);
 defineVariable(int, day);
 defineVariable(int, year);
 defineVariable(int, START_YEAR);
 defineVariable(float, value_change_rub);
 defineVariable(float, value_change_usd);
-defineVariable(int, money);
 defineVariable(char, script);
+
+// Int Money to do a cast between float and int
+defineVariable(int, money);
+
+
+// Base amount to be paid, which will change depending on education and productivity
+defineVariable(float, base_rub);
+defineVariable(float, base_usd);
+
+// Worker for which we are computing the fee
+defineVariable(Person, worker);
+defineVariable(int, worker_id);
+
+// Total amount of rubles we are going to receive for our services
+defineVariable(float, total_rubles);
+// Total amount of dollars we are going to receive for our services
+defineVariable(float, total_dollars);
+
+// Education multiplier of the salary. Educated workers will receive twice the compensation, while
+// non educated workers will receive 20% of compensation only
+defineVariable(float, salary_scale);
 
 defineFunction(Money, void, float:rub, float:usd)
 {
@@ -16,24 +37,55 @@ defineFunction(Money, void, float:rub, float:usd)
 	InitConstants();
 	Building_GetNumberOfBuildings(n);
 	Date_GetCurrentDate_D365Y(day, year);
+
+	// Inflation
 	value_change_rub = 1.1 ^ (year - START_YEAR);
 	value_change_usd = 1.03 ^ (year - START_YEAR);
 	if (value_change_usd < 1)
 	{
-		value_change_rub = 1;
-		value_change_usd = 1;
+            value_change_rub = 1;
+            value_change_usd = 1;
 	}
+
+	// Base amount to receive for the services of each worker
+	base_rub = value_change_rub * rub;
+	base_usd = value_change_usd * usd;
+
+        // Total amount to receive during the run of this script
+        total_rubles = 0.0;
+        total_dollars = 0.0;
+
+        // Look for buildings of type City Hall
 	for (i=0, i<n, i=i+1)
 	{
 		building.GetDataByIndex(i);
-		if(building.nType ? BUILDINGTYPE_CITYHALL)
-		{
-			money = building.nWorkersNum * value_change_rub * rub;
-			Money_AddRUB(money);
-			money = building.nWorkersNum * value_change_usd * usd;
-			Money_AddUSD(money);
-		}
+	  if(building.nType ? BUILDINGTYPE_CITYHALL)
+	  {
+		    // For each worker currently in the building, add some money
+    	    for (j=0, j<building.nWorkersNum, j=j+1)
+    	    {
+
+    	        // Obtain the worker
+    	        Building_Workers_GetID(i, j, worker_id);
+                worker.GetDataByIndex(worker_id);
+
+                //  The money we get from uneducated workers is highly diminished
+                //  while the number of educated is highly increased
+                salary_scale = 0.2;
+                if (worker.fEducation>1.999) {
+                    salary_scale = 2.0;
+                }
+
+                total_rubles = total_rubles + base_rub * salary_scale;
+                total_dollars = total_dollars + base_usd * salary_scale;
+            }
+	  }
 	}
+	// Casting to int to add the money
+	money = total_rubles;
+        Money_AddRUB(money);
+        money = total_dollars;
+        Money_AddUSD(money);
 	Script_Sleep(4.0);
 	returnVoid();
 }
