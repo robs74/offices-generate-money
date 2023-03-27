@@ -25,7 +25,7 @@ defineFunction(CalculateDemand, int)
 			workers = workers + building.nWorkersNum;
 		}
 	}
-	workers = PositivePartInt(workers - FREE_CIIZENS);
+	workers = PositivePartInt(workers - FREE_CITIZENS);
 	demand = PositivePartFloat(workers * INTERNAL_DEMAND_FACTOR);
 	return(demand);
 }

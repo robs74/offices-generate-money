@@ -1,5 +1,5 @@
 defineVariable(int, START_YEAR);
-defineVariable(int, FREE_CIIZENS);
+defineVariable(int, FREE_CITIZENS);
 defineVariable(float, INFLATION_RUB);
 defineVariable(float, INFLATION_USD);
 defineVariable(float, INTERNAL_DEMAND_FACTOR);
@@ -15,7 +15,7 @@ defineFunction(InitSettings, void)
 	INFLATION_RUB = 1.1; //rubles inflation rate (please keep at least one digit after the decimal point)
 	INFLATION_USD = 1.03; //dollars inflation rate (please keep at least one digit after the decimal point)
 	INTERNAL_DEMAND_FACTOR = 0.05; //how many workers should be employed in offices to serve 1 citizen (setting it to 0.0 or less will disable the feature; please keep at least one digit after the decimal point)
-	FREE_CIIZENS = 0; //if you are playing on a prepopulated map you should increase it so that you do not have to spam offices in the beginning
+	FREE_CITIZENS = 0; //if you are playing on a prepopulated map you should increase it so that you do not have to spam offices in the beginning
 	
 	//base prices of 1 unit of services (please keep at least one digit after the decimal point)
 	PRICE_BUY_RUB = 24.0;
