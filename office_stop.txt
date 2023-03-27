@@ -18,5 +18,6 @@ defineFunction(main, void)
 	{
 		Script_DestroyByName("office_rubusd.txt");
 	}
+	Objectives_ClearAll();
 	end();
 }

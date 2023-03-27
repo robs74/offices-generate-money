@@ -1,9 +1,11 @@
+include("include/SOVIETInstructions.txt");
+include("include/helper_functions.txt");
 include("include/office_money.txt");
+
 defineVariable(char, script);
 
 defineFunction(main, void)
 {
-	Script_SetContinuous(1);
 	Script_Exists("office_rub.txt", script);
 	if(script ? 1)
 	{
