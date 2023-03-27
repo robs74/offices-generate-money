@@ -1,39 +1,104 @@
-include("SOVIETInstructions.txt");
 defineVariable(int, n);
 defineVariable(int, i);
 defineVariable(Building, building);
-defineVariable(int, day);
-defineVariable(int, year);
-defineVariable(int, START_YEAR);
-defineVariable(float, value_change_rub);
-defineVariable(float, value_change_usd);
-defineVariable(int, money);
-defineVariable(char, script);
+defineVariable(float, value);
+defineVariable(float, price);
+defineVariable(float, factor);
+defineVariable(int, workers);
+defineVariable(int, services);
+defineVariable(int, demand);
+defineVariable(int, supply);
+defineVariable(int, difference);
+defineVariable(int, money_rub);
+defineVariable(int, money_usd);
+defineVariable(int, money_rub_add);
+defineVariable(int, money_usd_add);
 
-defineFunction(Money, void, float:rub, float:usd)
+defineFunction(CalculateDemand, int)
 {
-	START_YEAR = 1960;
-	InitConstants();
-	Building_GetNumberOfBuildings(n);
-	Date_GetCurrentDate_D365Y(day, year);
-	value_change_rub = 1.1 ^ (year - START_YEAR);
-	value_change_usd = 1.03 ^ (year - START_YEAR);
-	if (value_change_usd < 1)
+	workers = 0;
+	for (i=0, i<n, i=i+1)
 	{
-		value_change_rub = 1;
-		value_change_usd = 1;
+		building.GetDataByIndex(i);
+		if(building.nType ? BUILDINGTYPE_LIVING)
+		{
+			workers = workers + building.nWorkersNum;
+		}
 	}
+	workers = PositivePartInt(workers - FREE_CIIZENS);
+	demand = PositivePartFloat(workers * INTERNAL_DEMAND_FACTOR);
+	return(demand);
+}
+defineFunction(CalculateServicesFromBuilding, int, Building:office)
+{
+	//TODO
+	return(office.nWorkersNum);
+}
+defineFunction(CalculateSupply, int)
+{
+	services = 0;
 	for (i=0, i<n, i=i+1)
 	{
 		building.GetDataByIndex(i);
 		if(building.nType ? BUILDINGTYPE_CITYHALL)
 		{
-			money = building.nWorkersNum * value_change_rub * rub;
-			Money_AddRUB(money);
-			money = building.nWorkersNum * value_change_usd * usd;
-			Money_AddUSD(money);
+			services = services + CalculateServicesFromBuilding(building);
 		}
 	}
-	Script_Sleep(4.0);
+	supply = services;
+	return(supply);
+}
+//currency: 1 - rubles, 0 - dollars, direction: 1 - export, 0 - import
+defineFunction(Price, float, int:currency, int:direction) 
+{
+	//TODO
+	factor = 1.0;
+	price = factor * (direction * (currency * PRICE_SELL_RUB + (1 - currency) * PRICE_SELL_USD) + (1-direction) * (currency * PRICE_BUY_RUB + (1 - currency) * PRICE_BUY_USD));
+	return(price);
+}
+defineFunction(MakePeopleAngry, void, float:unpaid_services)
+{
+	//TODO
+	returnVoid();
+}
+defineFunction(Money, void, float:rub, float:usd)
+{
+	Script_SetContinuous(1);
+	InitConstants();
+	InitSettings();
+	Script_SetContinuous(1);
+	Building_GetNumberOfBuildings(n);
+	Money_GetRUB(money_rub);
+	Money_GetUSD(money_usd);
+	demand = CalculateDemand();
+	supply = CalculateSupply();
+	difference = supply - demand;
+	money_rub_add = ScaledRUB(rub * Price(1,1) * PositivePartInt(difference));
+	money_usd_add = ScaledUSD(usd * Price(0,1) * PositivePartInt(difference));
+	if (rub * Price(1,0) * PositivePartInt(-difference) < money_rub &
+		usd * Price(0,0) * PositivePartInt(-difference) < money_usd)
+	{
+		money_rub_add = money_rub_add + ScaledRUB(-rub * Price(1, 0) * PositivePartInt(-difference));
+		money_usd_add = money_usd_add + ScaledUSD(-usd * Price(0, 0) * PositivePartInt(-difference));
+	}
+	else()
+	{
+		MakePeopleAngry(0.0);
+	}
+	Money_AddRUB(money_rub_add);
+	Money_AddUSD(money_usd_add);
+	Objectives_ClearAll();
+	if (INTERNAL_DEMAND_FACTOR > 0)
+	{
+		Objectives_CreateNewString("services", "Services");
+		Objective_AddRequirement("services", demand * 1.0, "services_icon.png");
+		Objective_UpdateRequirement("services", 0, supply * 1.0);
+	}
+	Objectives_CreateNewString("services_balance", "Daily services balance");
+	Objective_AddRequirement("services_balance", 0.0, "editor/currency_ruble.png");
+	Objective_UpdateRequirement("services_balance", 0, money_rub_add * 1.0);
+	Objective_AddRequirement("services_balance", 0.0, "editor/currency_dollar.png");
+	Objective_UpdateRequirement("services_balance", 1, money_usd_add * 1.0);
+	Script_Sleep(60.0);
 	returnVoid();
 }
