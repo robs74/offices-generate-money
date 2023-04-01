@@ -1,7 +1,9 @@
 include("settings.txt");
 defineVariable(int, day);
+defineVariable(int, month);
 defineVariable(int, year);
 defineVariable(int, money);
+defineVariable(float, max);
 defineVariable(float, value_change_rub);
 defineVariable(float, value_change_usd);
 
@@ -21,9 +23,29 @@ defineFunction(PositivePartInt, int, int:y)
 	return (y);
 }
 
+defineFunction(MaxFloat, float, float:a, float:b)
+{
+    if (a < b) {
+        max = b;
+    }
+	else ()
+	{
+		max = a;
+	}
+	return (max);
+}
+
+defineFunction(ModuleFloat, float, float:c)
+{
+    if (c < 0) {
+        c = -c;
+    }
+	return (c);
+}
+
 defineFunction(ScaledRUB, int, float:value_rub)
 {
-	Date_GetCurrentDate_D365Y(day, year);
+	Date_GetCurrentDate_DMY(day, month, year);
 	value_change_rub = INFLATION_RUB ^ (year - START_YEAR);
 	money = value_rub * value_change_rub;
 	return(money);
@@ -31,8 +53,9 @@ defineFunction(ScaledRUB, int, float:value_rub)
 
 defineFunction(ScaledUSD, int, float:value_usd)
 {
-	Date_GetCurrentDate_D365Y(day, year);
+	Date_GetCurrentDate_DMY(day, month, year);
 	value_change_usd = INFLATION_USD ^ (year - START_YEAR);
 	money = value_usd * value_change_usd;
 	return(money);
 }
+
