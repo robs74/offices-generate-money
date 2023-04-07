@@ -79,6 +79,10 @@ defineFunction(CalculateSupply, int)
 			}
 		}
 	}
+	if(building.fEletric_Voltage < 0.9)
+	{
+		services = services * NO_POWER_FACTOR;
+	}
 	supply = services;
 	return(supply);
 }
