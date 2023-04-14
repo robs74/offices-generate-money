@@ -9,8 +9,8 @@ defineVariable(float, value_change_usd);
 
 defineFunction(PositivePartFloat, float, float:x)
 {
-    if (x < 0) {
-        x = 0;
+    if (x < 0.0) {
+        x = 0.0;
     }
 	return (x);
 }

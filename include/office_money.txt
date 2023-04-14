@@ -1,7 +1,9 @@
 defineVariable(int, n);
+defineVariable(int, m);
 defineVariable(int, i);
 defineVariable(int, k);
 defineVariable(Building, building);
+defineVariable(Vehicle, vehicle);
 defineVariable(float, value);
 defineVariable(float, price);
 defineVariable(float, factor);
@@ -10,6 +12,8 @@ defineVariable(int, population);
 defineVariable(int, workers);
 defineVariable(float, services);
 defineVariable(int, demand);
+defineVariable(float, demand_vehicles);
+defineVariable(float, vehicle_cost);
 defineVariable(int, supply);
 defineVariable(int, difference);
 defineVariable(int, money_rub);
@@ -35,6 +39,71 @@ defineVariable(int, random_is_fire);
 defineVariable(int, random_building_id);
 defineVariable(vec3, vector);
 
+defineFunction(CalculateVehicleDemand, float)
+{
+	Vehicle_GetNumberOfVehicles(m);
+	demand_vehicles = 0.0;
+	for (i=0, i<m, i=i+1)
+	{
+		vehicle.GetDataByIndex(i);
+		vehicle_cost = 0.0;
+		if(vehicle.nTransportType ? RESOURCE_TRANSPORT_PASSANGER)
+		{
+			//for passenger vehicles, the cost is determined per 10 passengers
+			vehicle_cost = vehicle.fResourceCapacity / 10.0;
+		}
+		elseif(vehicle.nTransportType > -1 & vehicle.nTransportType < RESOURCE_TRANSPORT_NUM)
+		{
+			//for freight vehicles, the cost is determined per 1 t
+			vehicle_cost = vehicle.fResourceCapacity;
+		}
+		//road vehicles
+		if(vehicle.nVehicleType > 0 & vehicle.nVehicleType < 3)
+		{
+			if(month > 2 & month < 8 & vehicle.nSkill[0] ? VEHICLESKILL_SEEDING)
+			{
+				//seeding vehicles need more services during the season
+				demand_vehicles = demand_vehicles + BASE_COST_SEEDING;
+			}
+			elseif(month > 7 & month < 12 & vehicle.nSkill[0] ? VEHICLESKILL_HARVESTING)
+			{
+				//harvesting vehicles need more services during the season
+				Window_ShowText("Cannot import locomotives with power greater than 1000kW ");
+				demand_vehicles = demand_vehicles + BASE_COST_HARVESTING;
+			}
+			elseif((month > 11 | month < 3) & vehicle.nSkill[0] ? VEHICLESKILL_SNOWPLOW)
+			{
+				//snowplowing vehicles need more services during the season
+				demand_vehicles = demand_vehicles + BASE_COST_SNOWPLOWING;
+			}
+			elseif(vehicle.nSkill[0] ? VEHICLESKILL_PERSONAL)
+			{
+				//personal cars don't need that many services
+				demand_vehicles = demand_vehicles + BASE_COST_PERSONAL;
+			}
+			else()
+			{
+				demand_vehicles = demand_vehicles + BASE_COST_ROAD + COST_ROAD_FACTOR * vehicle_cost;
+			}
+		}
+		//trains
+		elseif(vehicle.nVehicleType < 6)
+		{
+			demand_vehicles = demand_vehicles + BASE_COST_RAIL + COST_RAIL_FACTOR * vehicle_cost;
+		}
+		//ships
+		elseif(vehicle.nVehicleType ? VEHICLETYPE_SHIP)
+		{
+			demand_vehicles = demand_vehicles + BASE_COST_SHIP + COST_SHIP_FACTOR * vehicle_cost;
+		}
+		//planes, helicopters
+		elseif(vehicle.nVehicleType ? VEHICLETYPE_AIRPLANE | vehicle.nVehicleType ? VEHICLETYPE_HELICOPTER)
+		{
+			demand_vehicles = demand_vehicles + BASE_COST_AIR + COST_AIR_FACTOR * vehicle_cost;
+		}
+	}
+	return(demand_vehicles);
+}
 defineFunction(CalculateDemand, int)
 {
 	population = 0;
@@ -48,6 +117,7 @@ defineFunction(CalculateDemand, int)
 	}
 	workers = PositivePartInt(population - FREE_CITIZENS);
 	demand = PositivePartFloat(workers * INTERNAL_DEMAND_FACTOR);
+	demand = demand + CalculateVehicleDemand();
 	if(year - START_YEAR < GRACE_YEARS)
 	{
 		demand = (1 - GRACE_FACTOR ^ (year - START_YEAR + 1)) * demand;
@@ -93,11 +163,11 @@ defineFunction(Price, float, int:currency, int:excess)
 	factor = 1.0 - excess / price_inertia;
 	if(excess > 0)
 	{
-		price = factor * (currency * PRICE_SELL_RUB + (1 - currency) * PRICE_SELL_USD);
+		price = factor * (currency * PRICE_SELL_RUB + (1 - currency) * PRICE_SELL_USD) / (100 ^ NUMBER_OF_PRICE_DECREASES);
 	}
 	else()
 	{
-		price = factor * (currency * PRICE_BUY_RUB + (1 - currency) * PRICE_BUY_USD);
+		price = factor * (currency * PRICE_BUY_RUB + (1 - currency) * PRICE_BUY_USD) / (100 ^ NUMBER_OF_PRICE_DECREASES);
 	}
 	return(price);
 }
@@ -106,9 +176,9 @@ defineFunction(MakePeopleAngry, void, float:unpaid_services)
 	for(i=0, i<population, i=i+1)
 	{
 		worker.GetDataByIndex(i);
-		Person_SetStatus(i, 0, worker.fStatusHappiness - unpaid_services * UNHAPPINESS_FACTOR / 10) //decrease happiness
-		Person_SetStatus(i, 3, worker.fStatusSoviet - unpaid_services * LOYALTY_FACTOR / 10) //decrease loyalty
-		Person_SetStatus(i, 10, worker.fStatusCrime + unpaid_services * CRIME_FACTOR / 10) //increase crime
+		Person_SetStatus(i, 0, PositivePartFloat(worker.fStatusHappiness - unpaid_services * UNHAPPINESS_FACTOR / 10)) //decrease happiness
+		Person_SetStatus(i, 3, PositivePartFloat(worker.fStatusSoviet - unpaid_services * LOYALTY_FACTOR / 10)) //decrease loyalty
+		Person_SetStatus(i, 10, MaxFloat(worker.fStatusCrime + unpaid_services * CRIME_FACTOR / 10, 1.0)) //increase crime
 	}
 	//increased probability of fire
 	if(FIRE_PROB_DENOMINATOR > 0)
@@ -172,7 +242,9 @@ defineFunction(Money, void, float:rub, float:usd)
 			}
 			rub_ticks[k] = money_rub_add;
 			usd_ticks[k] = money_usd_add;
-			Objectives_ClearAll();
+			Objective_Remove("services");
+			Objective_Remove("service_price");
+			Objective_Remove("services_balance");
 			if (INTERNAL_DEMAND_FACTOR > 0)
 			{
 				//show the internal supply and demand for services
