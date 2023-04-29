@@ -17,16 +17,17 @@ defineVariable(int, GRACE_YEARS);
 defineVariable(float, GRACE_FACTOR);
 defineVariable(float, BASE_FOREIGN_SUPPLY_DEMAND);
 defineVariable(float, FOREIGN_SUPPLY_DEMAND_FACTOR);
+defineVariable(int, INFORMATION_SHOWN);
 
 defineFunction(InitSettings, void)
 {
 	//you can modify the following values to enable or disable features or change the balance, making the game harder or easier
 	//please keep at least one digit after the decimal point if present
 	
-	START_YEAR = 1950; //starting year of the game
+	START_YEAR = 1960; //starting year of the game
 	INFLATION_RUB = 1.09; //rubles inflation rate
 	INFLATION_USD = 1.027; //dollars inflation rate
-	INTERNAL_DEMAND_FACTOR = 0.04; //how many workers should be employed in offices to serve 1 citizen (setting it to 0.0 or less will disable the feature)
+	INTERNAL_DEMAND_FACTOR = 0.02; //how many workers should be employed in offices to serve 1 citizen (setting it to 0.0 or less will disable the feature)
 	FREE_CITIZENS = 0; //the number of citizens not needing any services (a negative value here will in turn increase the demand by a constant number)
 	GRACE_YEARS = 2; //the demand for services is decreased during the first years
 	GRACE_FACTOR = 0.5; //the decrease of demand in the first year (in the second year it's GRACE_FACTOR^2 and so on)
@@ -50,6 +51,8 @@ defineFunction(InitSettings, void)
 	CRIME_FACTOR = 0.005; //+0.5 percent points per day
 	
 	FIRE_PROB_DENOMINATOR = 100; //the additional probability per tick (~10 times a day) of fire is 1 over this, setting it to 0 or less will disable the feature
+	
+	INFORMATION_SHOWN = 1; //2 - full information (3 lines), 1 - concise information (1 line), 0 - turned off
 	
 	returnVoid();
 }

@@ -4,35 +4,21 @@ defineVariable(int, month);
 defineVariable(int, year);
 defineVariable(int, money);
 defineVariable(float, max);
+defineVariable(float, min);
+defineVariable(int, imax);
 defineVariable(float, value_change_rub);
 defineVariable(float, value_change_usd);
 
-defineFunction(PositivePartFloat, float, float:x)
+defineFunction(Clamp, float, float:x, float:y, float:z)
 {
-    if (x < 0) {
-        x = 0;
-    }
-	return (x);
-}
-
-defineFunction(PositivePartInt, int, int:y)
-{
-    if (y < 0) {
-        y = 0;
-    }
-	return (y);
-}
-
-defineFunction(MaxFloat, float, float:a, float:b)
-{
-    if (a < b) {
-        max = b;
-    }
-	else ()
+    if (x < y)
 	{
-		max = a;
+        x = y;
+    }
+	elseif(x > z) {
+		x = z;
 	}
-	return (max);
+	return(x);
 }
 
 defineFunction(ModuleFloat, float, float:c)
@@ -40,7 +26,46 @@ defineFunction(ModuleFloat, float, float:c)
     if (c < 0) {
         c = -c;
     }
-	return (c);
+	return(c);
+}
+
+defineFunction(MaxFloat, float, float:a, float:b)
+{
+    if (a < b)
+	{
+        max = b;
+    }
+	else()
+	{
+		max = a;
+	}
+	return(max);
+}
+
+defineFunction(MinFloat, float, float:e, float:f)
+{
+    if (e < f)
+	{
+        min = e;
+    }
+	else()
+	{
+		min = f;
+	}
+	return(min);
+}
+
+defineFunction(MaxInt, int, int:g, int:h)
+{
+    if (g < h)
+	{
+        imax = h;
+    }
+	else()
+	{
+		imax = g;
+	}
+	return(imax);
 }
 
 defineFunction(ScaledRUB, int, float:value_rub)
