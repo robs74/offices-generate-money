@@ -162,19 +162,19 @@ defineFunction(Money, void, float:rub, float:usd)
 			money_usd_add = MaxFloat(difference, 0.0) * usd * current_price_usd * 0.1;
 			money_rub_add = money_rub_add - MaxFloat(-difference, 0.0) * rub * current_price_rub * 0.1;
 			money_usd_add = money_usd_add - MaxFloat(-difference, 0.0) * usd * current_price_usd * 0.1;
-			if (-money_rub_add < money_rub & rub > 0.0)
+			if (-1.0 * money_rub_add < money_rub)
 			{
 				Money_AddRUB(money_rub_add);
 			}
-			else()
+			elseif(rub > 0.0)
 			{
 				MakePeopleAngry(rub * ModuleFloat(difference * 1.0 / demand));
 			}
-			if (-money_usd_add < money_usd & usd > 0.0)
+			if (-1.0 * money_usd_add < money_usd)
 			{
 				Money_AddUSD(money_usd_add);
 			}
-			else()
+			elseif(usd > 0.0)
 			{
 				MakePeopleAngry(usd * ModuleFloat(difference * 1.0 / demand));
 			}
