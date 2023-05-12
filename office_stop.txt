@@ -18,6 +18,8 @@ defineFunction(main, void)
 	{
 		Script_DestroyByName("office_rubusd.txt");
 	}
-	Objectives_ClearAll();
+	Objective_Remove("services");
+	Objective_Remove("service_price");
+	Objective_Remove("services_balance");
 	end();
 }
