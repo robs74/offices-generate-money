@@ -107,11 +107,11 @@ defineFunction(CalculateVehicleDemand, float)
 }
 defineFunction(CalculateDemand, int)
 {
-	population = 0;
+ 	population = 0;
 	for (i=0, i<n, i=i+1)
 	{
 		building.GetDataByIndex(i);
-		if(building.nType ? BUILDINGTYPE_LIVING & building.fPercFinished ? 1.0)
+		if(building.nType ? BUILDINGTYPE_LIVING & building.fPercFinished > 0.9999)
 		{
 			is_active = 0;
 			for(j=0, j<building.nWalkingBuildingNum & is_active ? 0, j = j+1)
@@ -128,7 +128,7 @@ defineFunction(CalculateDemand, int)
 	}
 	workers = MaxInt(population - FREE_CITIZENS, 0);
 	demand = MaxFloat(workers * INTERNAL_DEMAND_FACTOR, 0.0);
-	demand = demand + CalculateVehicleDemand();
+	//demand = demand + CalculateVehicleDemand();
 	if(year - START_YEAR < GRACE_YEARS)
 	{
 		demand = (1 - GRACE_FACTOR ^ (year - START_YEAR + 1)) * demand;
@@ -141,7 +141,7 @@ defineFunction(CalculateSupply, int)
 	for (i=0, i<n, i=i+1)
 	{
 		building.GetDataByIndex(i);
-		if(building.nType ? BUILDINGTYPE_CITYHALL & building.fPercFinished ? 1.0)
+		if(building.nType ? BUILDINGTYPE_CITYHALL & building.fPercFinished > 0.9999)
 		{
 		    // For each worker currently in the building, add some services
 			for (j=0, j<building.nWorkersNum, j=j+1)
@@ -248,7 +248,7 @@ defineFunction(Money, void, float:rub, float:usd)
 			money_usd_add = MaxFloat(difference, 0.0) * usd * current_price_usd * 0.1;
 			money_rub_add = money_rub_add - MaxFloat(-difference, 0.0) * rub * current_price_rub * 0.1;
 			money_usd_add = money_usd_add - MaxFloat(-difference, 0.0) * usd * current_price_usd * 0.1;
-			if (-1.0 * money_rub_add < money_rub & CAN_IMPORT_SERVICES > 0)
+			if (-1.0 * money_rub_add < MaxInt(money_rub, 0) & CAN_IMPORT_SERVICES > 0)
 			{
 				Money_AddRUB(money_rub_add);
 			}
@@ -256,7 +256,7 @@ defineFunction(Money, void, float:rub, float:usd)
 			{
 				MakePeopleAngry(rub * ModuleFloat(difference * 1.0 / demand));
 			}
-			if (-1.0 * money_usd_add < money_usd & CAN_IMPORT_SERVICES > 0)
+			if (-1.0 * money_usd_add < MaxInt(money_usd, 0) & CAN_IMPORT_SERVICES > 0)
 			{
 				Money_AddUSD(money_usd_add);
 			}

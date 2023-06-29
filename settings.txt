@@ -44,7 +44,7 @@ defineFunction(InitSettings, void)
 	START_YEAR = 1960; //starting year of the game
 	INFLATION_RUB = 1.09; //rubles inflation rate
 	INFLATION_USD = 1.027; //dollars inflation rate
-	INTERNAL_DEMAND_FACTOR = 0.015; //how many workers should be employed in offices to serve 1 citizen (setting it to 0.0 or less will disable the feature)
+	INTERNAL_DEMAND_FACTOR = 0.02; //how many workers should be employed in offices to serve 1 citizen (setting it to 0.0 or less will disable the feature)
 	FREE_CITIZENS = 0; //the number of citizens not needing any services (a negative value here will in turn increase the demand by a constant number)
 	GRACE_YEARS = 4; //the demand for services is decreased during the first years
 	GRACE_FACTOR = 0.5; //the decrease in demand in the first year (in the second year it's GRACE_FACTOR^2 and so on)
@@ -77,7 +77,7 @@ defineFunction(InitSettings, void)
 	
 	//base administrative cost (in units of services) needed by each vehicle regardless of its resource capacity
 	BASE_COST_ROAD = 0.25;
-	BASE_COST_RAIL = 0.25;
+	BASE_COST_RAIL = 0.5;
 	BASE_COST_SHIP = 3.0;
 	BASE_COST_AIR = 3.0;
 	
@@ -91,8 +91,8 @@ defineFunction(InitSettings, void)
 	
 	//administrative cost needed by each vehicle per each 1 t of resources or 10 passengers
 	COST_ROAD_FACTOR = 0.1;
-	COST_RAIL_FACTOR = 0.005;
-	COST_SHIP_FACTOR = 0.001;
+	COST_RAIL_FACTOR = 0.02;
+	COST_SHIP_FACTOR = 0.002;
 	COST_AIR_FACTOR = 0.1;
 	
 	returnVoid();
