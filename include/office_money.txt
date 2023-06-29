@@ -202,12 +202,15 @@ defineFunction(MakePeopleAngry, void, float:unpaid_services)
 			random_building_id = random_building_id % n;
 			building.GetDataByIndex(random_building_id);
 			vector = building.vPosition;
-			Building_StartFire(random_building_id);
-			Notification_CreateNewStringPic(
-			"Insufficient services",
-			"Lack of overseeing has led to an incident in one of our buildings. The building is on fire.",
-			"services_icon.png",
-			vector);
+			if(building.fPercFinished > 0.9999)
+			{
+				Building_StartFire(random_building_id);
+				Notification_CreateNewStringPic(
+				"Insufficient services",
+				"Lack of overseeing has led to an incident in one of our buildings. The building is on fire.",
+				"services_icon.png",
+				vector);
+			}
 		}
 	}
 	returnVoid();
