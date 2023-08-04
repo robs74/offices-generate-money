@@ -72,24 +72,23 @@ defineFunction(InitSettings, void)
 	
 	FIRE_PROB_DENOMINATOR = 100; //the additional probability per tick (~10 times a day) of fire is 1 over this, setting it to 0 or less will disable the feature
 	
-	//NO_POWER_FACTOR = 0.25;
-	NO_POWER_FACTOR = 1.0; //how much your generation of services is scaled when the office building lacks electricity (set to 1.0 if you play without power management)
+	NO_POWER_FACTOR = 0.25; //how much your generation of services is scaled when the office building lacks electricity (currently unused due to a game bug)
 	
-	//base administrative cost (in units of services) needed by each vehicle regardless of its resource capacity
+	//base administrative cost (in units of services) needed by each vehicle regardless of its resource capacity (currently unused due to a game bug)
 	BASE_COST_ROAD = 0.25;
 	BASE_COST_RAIL = 0.5;
 	BASE_COST_SHIP = 3.0;
 	BASE_COST_AIR = 3.0;
 	
-	//base administrative cost for seasonal vehicles
+	//base administrative cost for seasonal vehicles (currently unused due to a game bug)
 	BASE_COST_SEEDING = 0.25;
 	BASE_COST_HARVESTING = 0.25;
 	BASE_COST_SNOWPLOWING = 0.5;
 	
-	//base administrative cost for personal cars
+	//base administrative cost for personal cars (currently unused due to a game bug)
 	BASE_COST_PERSONAL = 0.02;
 	
-	//administrative cost needed by each vehicle per each 1 t of resources or 10 passengers
+	//administrative cost needed by each vehicle per each 1 t of resources or 10 passengers (currently unused due to a game bug)
 	COST_ROAD_FACTOR = 0.1;
 	COST_RAIL_FACTOR = 0.02;
 	COST_SHIP_FACTOR = 0.002;

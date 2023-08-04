@@ -41,6 +41,8 @@ defineVariable(int, random_is_fire);
 defineVariable(int, random_building_id);
 defineVariable(vec3, vector);
 
+//defineVariable(GameSetting, game);
+
 defineFunction(CalculateVehicleDemand, float)
 {
 	Vehicle_GetNumberOfVehicles(m);
@@ -160,10 +162,10 @@ defineFunction(CalculateSupply, int)
 			}
 		}
 	}
-	if(building.fEletric_Voltage < 0.9)
-	{
-		services = services * NO_POWER_FACTOR;
-	}
+	//if(building.fEletric_Voltage < 0.9 & game.EletricityLevel > 0)
+	//{
+	//	services = services * NO_POWER_FACTOR;
+	//}
 	supply = services;
 	return(supply);
 }
@@ -236,6 +238,7 @@ defineFunction(Money, void, float:rub, float:usd)
 	{
 		rub_sum2 = 0;
 		usd_sum2 = 0;
+		//game.GetCurrentGameSettigns();
 		for(k=0, k<10, k=k+1)
 		{
 			Script_EnterCriticalSection();

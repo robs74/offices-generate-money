@@ -481,6 +481,9 @@ defineInstruction(Infrastructure_CablewayGetLength, 1111, float);
 //////////////////////////////////////////
 //////////////////////////////////////////
 
+
+// THESE ARE NOT IMPLEMENTED YET !!!!
+
 // in - custom tag that will serve as identifier for this window; if a window with this tag exists, new window will not be created
 defineInstruction(Window_Create, 1200, string);
 
@@ -1009,6 +1012,11 @@ defineStruct(StatRecord, 105)
 
 	defineStructVariable(StatRecord, float, Tourism_SpendRidesUSD);
 	defineStructVariable(StatRecord, float, Tourism_SpendRidesRUB);
+	
+	defineStructVariable(StatRecord, float, Loan_Ballance_USD);
+	defineStructVariable(StatRecord, float, Loan_Interest_USD);
+	defineStructVariable(StatRecord, float, Loan_Ballance_RUB);
+	defineStructVariable(StatRecord, float, Loan_Interest_RUB);
 	
 	// ------
 	
