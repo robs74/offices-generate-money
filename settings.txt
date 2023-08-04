@@ -18,19 +18,40 @@ defineVariable(float, GRACE_FACTOR);
 defineVariable(float, BASE_FOREIGN_SUPPLY_DEMAND);
 defineVariable(float, FOREIGN_SUPPLY_DEMAND_FACTOR);
 defineVariable(int, INFORMATION_SHOWN);
+defineVariable(float, NO_POWER_FACTOR);
+defineVariable(int, NUMBER_OF_PRICE_DECREASES);
+defineVariable(float, BASE_COST_ROAD);
+defineVariable(float, BASE_COST_RAIL);
+defineVariable(float, BASE_COST_SHIP);
+defineVariable(float, BASE_COST_AIR);
+defineVariable(float, BASE_COST_SEEDING);
+defineVariable(float, BASE_COST_HARVESTING);
+defineVariable(float, BASE_COST_SNOWPLOWING);
+defineVariable(float, BASE_COST_PERSONAL);
+defineVariable(float, COST_ROAD_FACTOR);
+defineVariable(float, COST_RAIL_FACTOR);
+defineVariable(float, COST_SHIP_FACTOR);
+defineVariable(float, COST_AIR_FACTOR);
+defineVariable(int, INFORMATION_SHOWN);
+defineVariable(int, CAN_IMPORT_SERVICES);
 
 defineFunction(InitSettings, void)
 {
 	//you can modify the following values to enable or disable features or change the balance, making the game harder or easier
 	//please keep at least one digit after the decimal point if present
 	
+	INFORMATION_SHOWN = 1; //2 - full information (3 lines), 1 - concise information (1 line), 0 - turned off
+	
 	START_YEAR = 1960; //starting year of the game
 	INFLATION_RUB = 1.09; //rubles inflation rate
 	INFLATION_USD = 1.027; //dollars inflation rate
 	INTERNAL_DEMAND_FACTOR = 0.02; //how many workers should be employed in offices to serve 1 citizen (setting it to 0.0 or less will disable the feature)
 	FREE_CITIZENS = 0; //the number of citizens not needing any services (a negative value here will in turn increase the demand by a constant number)
-	GRACE_YEARS = 2; //the demand for services is decreased during the first years
-	GRACE_FACTOR = 0.5; //the decrease of demand in the first year (in the second year it's GRACE_FACTOR^2 and so on)
+	GRACE_YEARS = 4; //the demand for services is decreased during the first years
+	GRACE_FACTOR = 0.5; //the decrease in demand in the first year (in the second year it's GRACE_FACTOR^2 and so on)
+	NUMBER_OF_PRICE_DECREASES = 0; //how many times have you used cheats to divide prices by 100, every time you use it in your save you should increase it by 1 and restart the script, otherwise the cost of services will not be divided by 100
+	
+	CAN_IMPORT_SERVICES = 1; //1 or more allows you to import services from abroad if you need them, with 0 or less you have to generate the necessary services yourself
 	
 	//base prices of 1 unit of services
 	PRICE_BUY_RUB = 6.0;
@@ -53,6 +74,27 @@ defineFunction(InitSettings, void)
 	FIRE_PROB_DENOMINATOR = 100; //the additional probability per tick (~10 times a day) of fire is 1 over this, setting it to 0 or less will disable the feature
 	
 	INFORMATION_SHOWN = 1; //2 - full information (3 lines), 1 - concise information (1 line), 0 - turned off
+	NO_POWER_FACTOR = 0.25; //how much your generation of services is scaled when the office building lacks electricity (currently unused due to a game bug)
+	
+	//base administrative cost (in units of services) needed by each vehicle regardless of its resource capacity (currently unused due to a game bug)
+	BASE_COST_ROAD = 0.25;
+	BASE_COST_RAIL = 0.5;
+	BASE_COST_SHIP = 3.0;
+	BASE_COST_AIR = 3.0;
+	
+	//base administrative cost for seasonal vehicles (currently unused due to a game bug)
+	BASE_COST_SEEDING = 0.25;
+	BASE_COST_HARVESTING = 0.25;
+	BASE_COST_SNOWPLOWING = 0.5;
+	
+	//base administrative cost for personal cars (currently unused due to a game bug)
+	BASE_COST_PERSONAL = 0.02;
+	
+	//administrative cost needed by each vehicle per each 1 t of resources or 10 passengers (currently unused due to a game bug)
+	COST_ROAD_FACTOR = 0.1;
+	COST_RAIL_FACTOR = 0.02;
+	COST_SHIP_FACTOR = 0.002;
+	COST_AIR_FACTOR = 0.1;
 	
 	returnVoid();
 }

@@ -23,10 +23,18 @@ defineFunction(Clamp, float, float:x, float:y, float:z)
 
 defineFunction(ModuleFloat, float, float:c)
 {
-    if (c < 0) {
+    if (c < 0.0) {
         c = -c;
     }
 	return(c);
+}
+
+defineFunction(ModuleInt, int, int:d)
+{
+    if (d < 0) {
+        d = -d;
+    }
+	return(d);
 }
 
 defineFunction(MaxFloat, float, float:a, float:b)
