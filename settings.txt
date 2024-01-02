@@ -32,7 +32,6 @@ defineVariable(float, COST_ROAD_FACTOR);
 defineVariable(float, COST_RAIL_FACTOR);
 defineVariable(float, COST_SHIP_FACTOR);
 defineVariable(float, COST_AIR_FACTOR);
-defineVariable(int, INFORMATION_SHOWN);
 defineVariable(int, CAN_IMPORT_SERVICES);
 
 defineFunction(InitSettings, void)
@@ -42,7 +41,7 @@ defineFunction(InitSettings, void)
 	
 	INFORMATION_SHOWN = 1; //2 - full information (3 lines), 1 - concise information (1 line), 0 - turned off
 	
-	START_YEAR = 1960; //starting year of the game
+	START_YEAR = 1950; //starting year of the game
 	INFLATION_RUB = 1.09; //rubles inflation rate
 	INFLATION_USD = 1.027; //dollars inflation rate
 	INTERNAL_DEMAND_FACTOR = 0.02; //how many workers should be employed in offices to serve 1 citizen (setting it to 0.0 or less will disable the feature)
@@ -73,7 +72,6 @@ defineFunction(InitSettings, void)
 	
 	FIRE_PROB_DENOMINATOR = 100; //the additional probability per tick (~10 times a day) of fire is 1 over this, setting it to 0 or less will disable the feature
 	
-	INFORMATION_SHOWN = 1; //2 - full information (3 lines), 1 - concise information (1 line), 0 - turned off
 	NO_POWER_FACTOR = 0.25; //how much your generation of services is scaled when the office building lacks electricity (currently unused due to a game bug)
 	
 	//base administrative cost (in units of services) needed by each vehicle regardless of its resource capacity (currently unused due to a game bug)

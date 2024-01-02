@@ -158,15 +158,6 @@ defineInstruction(Money_GetUSD, 1003, int);
 defineInstruction(Money_AddRUB, 1005, int);
 defineInstruction(Money_AddUSD, 1006, int);
 
-// same as clicking on a building
-defineInstruction(Window_OpenBuildingWindow, 1007, int);
-
-// get index of topmost window, or -1 if no windows are open
-defineInstruction(Window_GetLastWindow, 1008, int);
-
-// set new screen position for selected window
-defineInstruction(Window_SetWindowPosition, 1009, int, float, float);
-
 // opens a debug window and displays text, max 250 characters
 defineInstruction(Window_ShowText, 1012, string);
 
@@ -179,6 +170,22 @@ defineInstruction(GetScreenSize, 1011, int, int);
 // first parameter is output height, second is input position
 defineInstruction(Terrain_GetHeight, 1013, float, vec3);
 
+// first param rub, second param usd; 0, 0 - build form resources
+defineInstruction(GetAutofinance, 1088, int, int);
+
+// 1 - imperial, 0 - metric
+defineInstruction(GetGameUnitSetup, 1128, int);
+
+// get identifier of the actual cursor tool;
+// char[0] == 0 if no tool is selected or if array is shorter than tools identifier; best to use array length 64
+defineInstruction(Tools_GetActualTool, 1085, char[]);
+
+// get building type, -1 if no tool, or no building type
+defineInstruction(Tools_GetActualToolBuildingType, 1086, int);
+
+// get building subtype, -1 if no tool, or no building type
+defineInstruction(Tools_GetActualToolBuildingSubType, 1096, int);
+
 // create a small box in the world (can serve as a marker)
 defineInstruction(ScreenMark_Create, 1014, vec3);
 // deletes all screen mark boxes
@@ -189,7 +196,7 @@ defineInstruction(Script_StartNew, 1016, string);
 // check if script with a name exists, input name, output char 0/1
 defineInstruction(Script_Exists, 1032, string, char);
 
-// how many script instructions are executed per second <1, 10000>
+// how many script instructions are executed per second <1, 50000>
 defineInstruction(Script_SetUpdateFrequency, 1017, int);
 defineInstruction(Script_GetUpdateFrequency, 1029, int);
 
@@ -214,9 +221,12 @@ defineInstruction(Script_ExecutionEntireAtOnce, 1035, int);
 defineInstruction(Script_ExecutionEntireAtOnceCD, 1050, float);
 
 // get current script time in seconds
-// get amount of seconds since this script was launched, this time is paused while game is paused
-// and the speed is doulbed if the game runs at 2x speed
+// get amount of seconds since this script was launched, ignore game pause and game speed
 defineInstruction(Script_GetTime, 1018, float);
+
+// get current script time in seconds
+// get amount of seconds since this script was launched, accounts for game pause and game speed
+defineInstruction(Script_GetGameTime, 1123, float);
 
 // all instructions inside of critical section are executed in a single frame
 // be careful with this instruction as it can freeze the game; see freeze.txt example for more
@@ -248,6 +258,9 @@ defineInstruction(Objective_AddRequirement, 1022, string, float, string);
 
 // input: identifier, index, value
 defineInstruction(Objective_UpdateRequirement, 1023, string, int, float);
+
+// input: identifier, index, value
+defineInstruction(Objective_UpdateRequiredValue, 1087, string, int, float);
 
 // input: identifier, index; set value to required value
 defineInstruction(Objective_UpdateRequirementToTarget, 1027, string, int);
@@ -371,6 +384,9 @@ window element identifiers are:
 	vehicle_buttonrename
 	vehicle_buttoncanload
 	
+	storage_plus_<resource>
+	storage_minus_<resource>
+	
 for menu elements its: <tabidentifier>_<toolidentifier>; example forcitizens_firestation
 
 for static elements we also mention max levels
@@ -392,6 +408,7 @@ for static elements: <identifier>
 	contruction_usd			1
 	contruction_rub			1
 	contruction_office		1
+	contruction_start		1
 	
 	miniwindow_goods		1
 	miniwindow_citizens		1
@@ -399,7 +416,14 @@ for static elements: <identifier>
 
 // same as Scenario_WindowPointerGUI; however this instruction creates the red arrow pointer and leaves in on the screen without the need for a window with explanations
 // enter empy string "" to remove red arrow
-defineInstruction(Scenario_RedArrowPointerGUI, 1079, string);
+// second param - importance, if red arrow is already present, don't change it unless this gets called with higher importance
+defineInstruction(Scenario_RedArrowPointerGUI, 1079, string, int);
+
+// places the red arrow into the world, importance
+defineInstruction(Scenario_RedArrowPointerWorld, 1090, vec3, int);
+
+// out - is arrow active, out importance
+defineInstruction(Scenario_RedArrowPointerGUIExist, 1089, int, int);
 
 // is mouse over red arrow, out 0/1; only used for <for static elements>
 defineInstruction(Scenario_RedArrowMouseOver, 1080, int);
@@ -420,6 +444,8 @@ defineInstruction(Scenario_WindowPointerVehicle, 1062, void, void, void);
 
 // out - exists; 0 - none; 1 - gui; 2 - map; 3 - building; 4 - vehicle; 5 - red arrow only
 defineInstruction(Scenario_WindowPointerExists, 1072, int);
+
+defineInstruction(Scenario_WindowPointerClose, 1084);
 
 // returns current screen position of the red arrow associated with Scenario_WindowPointerGUI; position x, position y, level;
 // if Scenario_WindowPointerGUI is not open return 0 for all outputs
@@ -448,31 +474,67 @@ defineInstruction(Scenario_CloseMainTabs, 1082);
 defineInstruction(Scenario_ObjectiveDestroy, 1070, string);
 defineInstruction(Scenario_ObjectiveClearAll, 1071);
 
+// only for official scenarios
+defineInstruction(Scenario_UnlockNextScenarios, 1083);
+
 // in - user input iden (get form controls.ini), output 0/1
 defineInstruction(Scenario_GetUserInput, 1075, string, int);
 
 // out - mouse x, y
 defineInstruction(Scenario_GetMousePosition, 1077, int, int);
 
+// in - building index, vehicle ident; similar to purchase vehicle via purchase window; does not substract money
+defineInstruction(Scenario_AddRoadVehicleToBuilding, 1124, int, string);
+defineInstruction(Scenario_AddRoadVehicleBlueprint, 1125, string);
+defineInstruction(Scenario_RemoveRoadVehicleBlueprint, 1126, string);
+defineInstruction(Scenario_UnlockResearch, 1127, string);
 
-//////////////////////////////////////////
-//////////////////////////////////////////
-// Infrastructure
-//////////////////////////////////////////
-//////////////////////////////////////////
+// in - building id, in - type ident
+defineInstruction(Scenario_OrderAirplaneToBuilding, 1129, int, string);
 
-defineInstruction(Infrastructure_RoadGetLength, 1100, float);
-defineInstruction(Infrastructure_PedestrianwayGetLength, 1101, float);
-defineInstruction(Infrastructure_ConveyorGetLength, 1102, float);
-defineInstruction(Infrastructure_PipeGetLength, 1103, float);
-defineInstruction(Infrastructure_HeatingPipesGetLength, 1104, float);
-defineInstruction(Infrastructure_RailGetLength, 1105, float);
-defineInstruction(Infrastructure_FactoryConnectionGetLength, 1106, float);
-defineInstruction(Infrastructure_EletricHighGetLength, 1107, float);
-defineInstruction(Infrastructure_EletricLowGetLength, 1108, float);
-defineInstruction(Infrastructure_FenceGetLength, 1109, float);
-defineInstruction(Infrastructure_AirplaneGetLength, 1110, float);
-defineInstruction(Infrastructure_CablewayGetLength, 1111, float);
+defineInstruction(Scenario_GetTourismTripRatingSoviet, 1130, float);
+defineInstruction(Scenario_GetTourismTripRatingWest, 1131, float);
+
+defineInstruction(Scenario_FollowCameraOnVehicle, 1133, int);
+
+
+//////////////////
+// researches
+
+defineInstruction(Research_IsCompleted, 1091, string, int);
+defineInstruction(Research_IsAvailable, 1092, string, int);
+defineInstruction(Research_CurrentlyResearched, 1093, string, int);
+defineInstruction(Research_GetCurrentlyResearchedBuildingID, 1094, string, int);
+defineInstruction(Research_PercFinished, 1095, string, float);
+
+defineInstruction(Research_GetNumOfAll, 1122, int);
+defineInstruction(Research_GetNumOfCompleted, 1098, int);
+
+// get i-th completed research, out char array with ident should be at least char[64],
+defineInstruction(Research_GetCompletedByIndex, 1099, int, char[]);
+
+// get i-th incomplete research, out char array with ident should be at least char[64],
+defineInstruction(Research_GetIncompletByIndex, 1120, int, char[]);
+
+// in - research identifier
+// out - BUILDINGSUBTYPE - BUILDINGSUBTYPE_MEDICAL, BUILDINGSUBTYPE_TECHNICAL, BUILDINGSUBTYPE_SOVIET
+defineInstruction(Research_GetUniversityType, 1121, char[], int);
+
+
+
+
+//////////////////
+// global events
+
+// in - duration, peak, strength, infection rate
+defineInstruction(GlobalEvent_StartEpidemy, 1097, int, int, float, int);
+
+// in - strength, in - radius, in - position
+defineInstruction(GlobalEvent_StartEarthquake, 1132, float, float, vec3);
+
+// in - type, out - 0/1
+defineInstruction(GlobalEvent_Exists, 1134, int, int);
+defineInstruction(GlobalEvent_EarthquakePreparing, 1135, int);
 
 
 //////////////////////////////////////////
@@ -527,7 +589,8 @@ defineInstruction(strcpyFrom, 2006, char[], char[], int);
 // opens a debug window and displays text, max 250 characters
 defineInstruction(Window_ShowCharArray, 2007, char[]);
 
-
+defineInstruction(atoi, 2008, char[], int);
+defineInstruction(atof, 2009, char[], float);
 
 //////////////////////////////////////////
 // Current Game Settings
@@ -568,10 +631,7 @@ defineStruct(Building, 100)
 
 	defineStructInstruction(Building, GetDataByIndex, 10000, int);   // get in-game building data by index
 	defineStructInstruction(Building, GetDataByTag, 10001, string, int);  // get in-game building data by custom tag
-	 
 	
-	
-
 
 	defineStructVariable(Building, vec3, vPosition);
 	defineStructVariable(Building, int, nType);				//check constants - BUILDINGTYPE
@@ -614,7 +674,60 @@ defineStruct(Building, 100)
 	defineStructVariable(Building, float, fEletric_CurcuitBreakerCapacity);
 	
 	defineStructVariable(Building, int, nBorder_USD1_Rub2);
-
+	defineStructVariable(Building, int, nValidRead);
+	
+	defineStructVariable(Building, char, bConstructionActive);
+	defineStructVariable(Building, char, bFundedRUB);
+	defineStructVariable(Building, char, bFundedUSD);
+	
+	defineStructVariable(Building, int, nConstructionBuildingNum);
+	defineStructVariable(Building, int, nConstructionOfficeNum);
+	defineStructVariable(Building, char, bFireEnabled);
+	
+	defineStructVariable(Building, float, fUpbringing_Security);
+	defineStructVariable(Building, float, fLoyalty_Requirement);
+	defineStructVariable(Building, float, fLoyalty_CoolDown);
+	defineStructVariable(Building, float, fLoyalty_RequirementStudents);
+	
+	defineStructVariable(Building, int, nConnectionNum);
+	defineStructVariable(Building, int, nConnectionDeadNum);
+	
+	defineStructVariable(Building, int, nAssignedBuildingDescriptionsNum);
+	defineStructVariable(Building, int, nStorageNum);
+	
+	defineStructVariable(Building, float, fWater_CurrentDrinkAmount);
+	defineStructVariable(Building, float, fWater_DrinkCapacity);
+	defineStructVariable(Building, float, fWater_CurrentDrinkQuality);
+	defineStructVariable(Building, char, bWater_Connected);
+	
+	defineStructVariable(Building, float, fSewage_CurrentAmount);
+	defineStructVariable(Building, float, fSewage_Capacity);
+	defineStructVariable(Building, float, fSewage_CurrentQuality);
+	defineStructVariable(Building, char, bSewage_Connected);
+	
+	defineStructVariable(Building, int, nWaterSewage_ConnecitonNum);
+	
+	defineStructVariable(Building, int, nVehicleParking);
+	defineStructVariable(Building, int, nResource_Source);
+	
+	defineStructVariable(Building, int, nStorage_Resources_PurchaseFlag);
+	defineStructVariable(Building, int, nStorage_Resources_SellFlag);
+	
+	// for nuclear powerplants
+	defineStructVariable(Building, int, nCoolingTowersNecessary);
+	defineStructVariable(Building, int, nCoolingTowersConnected);
+	
+	defineStructVariable(Building, int, nVehicleStation);
+	defineStructVariable(Building, int, nChildrenBuildingNum);
+	
+	defineStructVariable(Building, int, nWorkersNeeded);
+	defineStructVariable(Building, int, nProffesorsNeeded);
+	
+	defineStructVariable(Building, int, nParentBuildingIndex);
+	defineStructVariable(Building, int, nCitizenAbleServe);
+	
+	defineStructVariable(Building, int, nAttractionType);
+	
 }
 
 
@@ -629,6 +742,13 @@ defineInstruction(Building_StartFire, 11002, int);
 // set custom tag for selected building
 defineInstruction(Building_SetTag, 11003, string, int);
 defineInstruction(Building_GetByTag, 11004, string, int);
+
+// set custom tag for selected building; should be at least 64 array char[64]
+defineInstruction(Building_SetTagChar, 11020, char[], int);
+defineInstruction(Building_GetByTagChar, 11021, char[], int);
+
+// obtain tag of building; should be at least 64 array char[64]
+defineInstruction(Building_GetCharTag, 11022, int, char[]);
 
 // in m_Building id, in WalkingBuilding id, out WalkingBuilding id in m_Building
 defineInstruction(Building_WalkingBuilding_GetID, 11005, int, int, int);
@@ -649,8 +769,39 @@ defineInstruction(Building_Demolish, 11012, int);
 // in building id, out: -1 not old town, 0 - not active, 1 - active
 defineInstruction(Building_IsOldTownActive, 11013, int, int);
 
+// in building id, out open: 0/1, out focus: 0/1
+defineInstruction(Building_HasWindowOpen, 11014, int, int, int);
 
+// in m_Building id, in ConstructionBuilding id, out ConstructionBuilding id in m_Building
+defineInstruction(Building_ConstructionBuilding_GetID, 11015, int, int, int);
 
+// in m_Building id, in ConstructionBuilding id, out ConstructionBuilding id in m_Building
+defineInstruction(Building_ConstructionOffice_GetID, 11016, int, int, int);
+
+// in m_Building id, in AssignedBuildingDescription id, out AssignedBuildingDescription id in m_Building
+defineInstruction(Building_AssignedBuildingDescription_GetBuildingID, 11017, int, int, int);
+
+// in m_Building id, in AssignedBuildingDescription id, out AssignedBuildingDescription id in m_Building
+defineInstruction(Building_WaterSewageConnecitons_GetBuildingID, 11018, int, int, int);
+
+// in m_Building id, in AssignedBuildingDescription id, out AssignedBuildingDescription id in m_Building
+defineInstruction(Building_ResourceSource_GetBuildingID, 11019, int, int, int);
+
+// in - building id
+defineInstruction(Building_ProductionLineCancelAllProduction, 11023, int);
+
+// in - building id, in - station index, out - station type
+defineInstruction(Building_GetVehicleStationType, 11024, int, int, int);
+
+// in - building id, in - child index, out - building index
+defineInstruction(Building_GetChildBuildingId, 11025, int, int, int);
+
+// in - building id, out - number of near buildings
+// also fills a temporary list of located buildings - use this inly within Script_EnterCriticalSection as this list can be overwritten by other functions
+defineInstruction(Building_GetTargetNumForFirestations, 11026, int, int);
+
+// in - index in list, out - index building index
+defineInstruction(Building_GetPathsBuildingIndex, 11027, int, int);
 
 
 
@@ -666,9 +817,6 @@ defineStruct(Vehicle, 101)
 {
 	defineStructInstruction(Vehicle, GetDataByIndex, 20000, int);   // get in-game vehicle data by index
 	defineStructInstruction(Vehicle, GetDataByTag, 20001, string, int);  // get in-game vehicle data by custom tag
-	
-	
-	
 	
 	
 	defineStructVariable(Vehicle, vec3, vPosition);
@@ -703,8 +851,13 @@ defineStruct(Vehicle, 101)
 	defineStructVariable(Vehicle, int, nCarry_OtherVehiclesNum);
 	defineStructVariable(Vehicle, char, bCarry_MustBeLoadedToVehicle);
 	defineStructVariable(Vehicle, char, bCarry_CanBeLoadedToVehicle);
-	defineStructVariable(Vehicle, int, nSchedule_StationsGetNum);
-	defineStructVariable(Vehicle, int, nSchedule_StationCurrent);
+	defineStructVariable(Vehicle, int, nSchedule_MovementBuildingNum);
+	defineStructVariable(Vehicle, int, nSchedule_MovementBuildingCurrent);
+	
+	defineStructVariable(Vehicle, int, nValidRead);
+	defineStructVariable(Vehicle, char, bDisableSell);
+	defineStructArray(Vehicle, char[128], sIdent);
+	defineStructVariable(Vehicle, char, bBrandNew);
 }
 
 //functions
@@ -742,6 +895,23 @@ defineInstruction(Vehicle_Workers_GetID, 21012, int, int, int);
 //func:  Vehicle_Carry_GetVehicleID - m_CargoVehicles[ID]->SerializationIndex
 defineInstruction(Vehicle_Carry_GetVehicleID, 21013, int, int, int);
 
+// get building id from vehicle id and movement building id
+//func in - vehicle id; in - station id, out - building id
+defineInstruction(Vehicle_MovementBuilding_GetID, 21014, int, int, int);
+
+// set custom tag for selected building; should be at least 64 array char[64]
+defineInstruction(Vehicle_SetTagChar, 21015, char[], int);
+defineInstruction(Vehicle_GetByTagChar, 21016, char[], int);
+
+// obtain tag of building; should be at least 64 array char[64]
+defineInstruction(Vehicle_GetCharTag, 21017, int, char[]);
+
+// in - vehicle id, in -  can sell 0/1
+defineInstruction(Vehicle_SetCanSell, 21018, int, int);
+
+// in - building 1 index, in - hub 1 index, in - building 2 index, in hub 2 index, in - takeoff distance, out - 0/1
+// can airplane go from building 1 to building 2
+defineInstruction(Vehicle_CheckAirplaneConnection, 21019, int, int, int, int, float, int);
 
 
 //////////////////////////////////////////
@@ -781,6 +951,19 @@ defineStruct(Person, 102)
 	defineStructVariable(Person, char, bIsHome);
 	defineStructVariable(Person, char, bIsUnemployed);
 	defineStructVariable(Person, char, bIsUnemployedDueKids);
+	
+	defineStructVariable(Person, int, nValidRead);
+	
+	defineStructVariable(Person, char, bWorkplaceAsProfesor);
+	defineStructVariable(Person, char, bWorkOnReconstruction);
+	
+	// 0 - not foreign, 1 - soviet, 2 - western
+	defineStructVariable(Person, int, nForeignWorkerFlag);
+	
+	defineStructVariable(Person, int, nDemandUnsatisfiedNum);
+	defineStructArray(Person, int[7], nDemandUnsatisfied);
+	
+	defineStructVariable(Person, int, nParentID);
 }
 
 //functions
@@ -797,6 +980,9 @@ defineInstruction(Person_SetStatus, 31003, int, int, float);
 defineInstruction(Person_SetAge, 31004, int, float);
 // education 0-3; <0, 1) no education; <1, 2) basic education; <2, 3) high education
 defineInstruction(Person_SetEducation, 31005, int, float);
+
+// get the number of all workers on the entire map, this includes tourists and foreign workers on customs
+defineInstruction(Person_GetNumberOfPeople, 31006, int);
 
 
 
@@ -815,7 +1001,7 @@ defineStruct(Namepoint, 103)
 	defineStructInstruction(Namepoint, GetDatabyTag, 40001, string, int);  // get in-game Namepoint data by custom tag
 	
 	
-
+	defineStructVariable(Namepoint, int, nValidRead);
 	defineStructVariable(Namepoint, vec3, vPosition);
 	defineStructVariable(Namepoint, int, nBuildingNum);
 }
@@ -826,6 +1012,11 @@ defineStruct(Namepoint, 103)
 // set custom tag
 defineInstruction(Namepoint_SetTag, 41001, string, int);
 defineInstruction(Namepoint_GetByTag, 41002, string, int);
+
+// get building from namepoint, in - namepoint id, building id in namepoint list, out - building id
+defineInstruction(Namepoint_GetBuildingID, 41003, int, int, int);
+
+defineInstruction(Namepoint_GetNumberOfNamepoints, 41004, int);
 
 
 
@@ -883,22 +1074,23 @@ defineStruct(Resources, 104)
 	defineStructVariable(Resources, float, mcomponents);
 	defineStructVariable(Resources, float, plastics);
 	defineStructVariable(Resources, float, eletronics);
-	defineStructVariable(Resources, float, _Resources_reserved_0_);
-	defineStructVariable(Resources, float, _Resources_reserved_1_);
-	defineStructVariable(Resources, float, _Resources_reserved_2_);
-	defineStructVariable(Resources, float, _Resources_reserved_3_);
-	defineStructVariable(Resources, float, _Resources_reserved_4_);
-	defineStructVariable(Resources, float, _Resources_reserved_5_);
-	defineStructVariable(Resources, float, _Resources_reserved_6_);
-	defineStructVariable(Resources, float, _Resources_reserved_7_);
-	defineStructVariable(Resources, float, _Resources_reserved_8_);
-	defineStructVariable(Resources, float, _Resources_reserved_9_);
-	defineStructVariable(Resources, float, _Resources_reserved_10_);
-	defineStructVariable(Resources, float, _Resources_reserved_11_);
-	defineStructVariable(Resources, float, _Resources_reserved_12_);
-	defineStructVariable(Resources, float, _Resources_reserved_13_);
-	defineStructVariable(Resources, float, _Resources_reserved_14_);
-	defineStructVariable(Resources, float, _Resources_reserved_15_);
+	defineStructVariable(Resources, float, explosives);
+	defineStructVariable(Resources, float, water);
+	defineStructVariable(Resources, float, usagewater);
+	defineStructVariable(Resources, float, fertiliser_liquid);
+	defineStructVariable(Resources, float, waste_gravel);
+	defineStructVariable(Resources, float, waste_steel);
+	defineStructVariable(Resources, float, waste_aluminium);
+	defineStructVariable(Resources, float, waste_plastic);
+	defineStructVariable(Resources, float, waste_bio);
+	defineStructVariable(Resources, float, fertiliser);
+	defineStructVariable(Resources, float, waste_burnable);
+	defineStructVariable(Resources, float, waste_toxic);
+	defineStructVariable(Resources, float, waste_other);
+	defineStructVariable(Resources, float, waste_ash);
+	defineStructVariable(Resources, float, waste_mixed);
+	defineStructVariable(Resources, float, service_material);
+	
 	defineStructVariable(Resources, float, _Resources_reserved_16_);
 	defineStructVariable(Resources, float, _Resources_reserved_17_);
 	defineStructVariable(Resources, float, _Resources_reserved_18_);
@@ -913,8 +1105,24 @@ defineStruct(Resources, 104)
 	defineStructInstruction(Resources, GetCapacityFromBuilding, 50009, int);
 	defineStructInstruction(Resources, AddCapacityFromBuilding, 50010, int);
 	
+	defineStructInstruction(Resources, GetSharedCapacityFromBuilding, 50017, int);	// get storage capacity divided by number of resources that can be stored here
+	
 	defineStructInstruction(Resources, GetProductionFromBuilding, 50013, int);
 	defineStructInstruction(Resources, GetConsumptionFromBuilding, 50014, int);
+	
+	defineStructInstruction(Resources, GetValueMaxFromBuilding, 50018, int);
+	
+	defineStructInstruction(Resources, GetPurchaseValue, 50020);		// resources that are currently being purchased in purchase window
+	defineStructInstruction(Resources, GetPurchaseValueMax, 50021);
+	
+	defineStructInstruction(Resources, GetStationAvailableFromBuilding, 50022, int);	// slow instruction
+	
+	defineStructInstruction(Resources, GetFromBuildingStorage, 50023, int, int);
+	defineStructInstruction(Resources, GetFromBuildingByTagStorage, 50024, string, int);
+	
+	defineStructInstruction(Resources, GetConstructionCostFromBuilding, 50025, int);
+	
+	defineStructInstruction(Resources, GetFromVehicleEntireTrainAndContainers, 50026, int);
 	
 	// in tag, out success/fail
 	
@@ -930,13 +1138,13 @@ defineStruct(Resources, 104)
 	defineStructInstruction(Resources, GetProductionFromBuildingByTag, 50015, string, int);
 	defineStructInstruction(Resources, GetConsumptionFromBuildingByTag, 50016, string, int);
 	
+	defineStructInstruction(Resources, GetValueMaxFromBuildingByTag, 50019, string);
+	
 	defineStructInstruction(Resources, ResetAmounts, 50004);
 }
 
 //functions
 ///////////////////////////
-
-
 
 
 
@@ -954,6 +1162,18 @@ defineStruct(StatRecord, 105)
 	
 	defineStructVariable(StatRecord, Resources, ExportTonsUSD);
 	defineStructVariable(StatRecord, Resources, ExportValueUSD);
+	
+	defineStructVariable(StatRecord, Resources, ImportInternationalTonsRUB);
+	defineStructVariable(StatRecord, Resources, ImportInternationalValueRUB);
+	
+	defineStructVariable(StatRecord, Resources, ImportInternationalTonsUSD);
+	defineStructVariable(StatRecord, Resources, ImportInternationalValueUSD);
+	
+	defineStructVariable(StatRecord, Resources, ExportInternationalTonsRUB);
+	defineStructVariable(StatRecord, Resources, ExportInternationalValueRUB);
+	
+	defineStructVariable(StatRecord, Resources, ExportInternationalTonsUSD);
+	defineStructVariable(StatRecord, Resources, ExportInternationalValueUSD);
 	
 	defineStructVariable(StatRecord, Resources, SpendConstruction);
 	defineStructVariable(StatRecord, Resources, SpendFactories);
@@ -1033,7 +1253,306 @@ defineStruct(StatRecord, 105)
 	
 	// 0-365, day year
 	defineStructInstruction(StatRecord, GetFromDateToDate_D365Y, 60004, int, int, int, int);
+	
+	
+	
+	// get stats for namepoint
+	// first input param - namepoint id
+	defineStructInstruction(StatRecord, GetPresentForNamePoint, 60005, int);
 }
+
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+// ROADS
+//////////////////////////////////////////
+//////////////////////////////////////////
+
+// type index; this is different from SOVIET_ROADTYPE
+// 0 - m_Road
+// 1 - m_PedestrianWay
+// 2 - m_Conveyor
+// 3 - m_Pipe
+// 4 - m_HeatingPipes
+// 5 - m_Rail
+// 6 - m_FactoryConnection
+// 7 - m_EletricHigh
+// 8 - m_EletricLow
+// 9 - m_Fence
+// 10 - m_Airplane
+// 11 - m_Cableway
+// 12 - m_WaterPipes
+
+//data struct
+///////////////////////////
+defineStruct(Road, 106)
+{
+
+	defineStructInstruction(Road, GetDataByIndex, 70000, int, int);   // get in-game Road data by type and index
+	defineStructInstruction(Road, GetDataByTempConstructionBuilingIndex, 70001, int);   // get in-game Road data by building index
+	 
+	defineStructVariable(Road, int, nValidRead);
+	defineStructVariable(Road, vec3, vHub0);
+	defineStructVariable(Road, vec3, vHub1);
+	
+	defineStructVariable(Road, float, fLength);
+	defineStructVariable(Road, int, nPoints);
+	
+	defineStructVariable(Road, int, nLevel);
+	defineStructVariable(Road, int, nSubLevel);
+	
+	defineStructVariable(Road, int, nOneWay);
+	
+	defineStructVariable(Road, char, bVisible);
+
+	defineStructVariable(Road, char, bFinished);
+	defineStructVariable(Road, char, bBlueprint);
+	defineStructVariable(Road, char, bConstructionActive);
+	defineStructVariable(Road, char, bFundedRUB);
+	defineStructVariable(Road, char, bFundedUSD);
+	
+	defineStructVariable(Road, int, nType);
+}
+
+//functions
+///////////////////////////
+
+// in - road type, out - num of fragments; -1 if wrong type
+defineInstruction(Road_GetNumberOfFragments, 71001, int, int);
+
+// in - road type, out - num of blueprint fragments; -1 if wrong type
+defineInstruction(Road_GetNumberOfBlueprints, 71002, int, int);
+
+// out - position, in - type, index, point
+defineInstruction(Road_GetPointPositionFromTypeIndexPoint, 71003, vec3, int, int, int);
+
+// out - position, in - building, point index
+defineInstruction(Road_GetPointPositionFromConstructionBuilding, 71004, vec3, int, int);
+
+
+
+//////////////////////////////////////////
+// Infrastructure
+//////////////////////////////////////////
+
+defineInstruction(Infrastructure_RoadGetLength, 1100, float);
+defineInstruction(Infrastructure_PedestrianwayGetLength, 1101, float);
+defineInstruction(Infrastructure_ConveyorGetLength, 1102, float);
+defineInstruction(Infrastructure_PipeGetLength, 1103, float);
+defineInstruction(Infrastructure_HeatingPipesGetLength, 1104, float);
+defineInstruction(Infrastructure_RailGetLength, 1105, float);
+defineInstruction(Infrastructure_FactoryConnectionGetLength, 1106, float);
+defineInstruction(Infrastructure_EletricHighGetLength, 1107, float);
+defineInstruction(Infrastructure_EletricLowGetLength, 1108, float);
+defineInstruction(Infrastructure_FenceGetLength, 1109, float);
+defineInstruction(Infrastructure_AirplaneGetLength, 1110, float);
+defineInstruction(Infrastructure_CablewayGetLength, 1111, float);
+
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+// WINDOWS
+//////////////////////////////////////////
+//////////////////////////////////////////
+
+
+//data struct
+///////////////////////////
+defineStruct(Window, 107)
+{
+
+	defineStructInstruction(Window, GetDataByIndex, 80000, int);   // get in-game Window data by index; index can change if focused window is chaged
+	 
+	defineStructVariable(Window, int, nValidRead);
+	
+	defineStructVariable(Window, char, bMinimized);
+	defineStructVariable(Window, vec3, vPosition);
+	defineStructVariable(Window, vec3, vWindowCorner);
+	defineStructVariable(Window, int, nErrorType);
+	defineStructVariable(Window, int, nPurchase);
+	
+	defineStructVariable(Window, int, nReferenceObjectType);
+	defineStructVariable(Window, int, nRefObjectIndex);
+	
+	defineStructVariable(Window, int, nWindowType);
+	
+	defineStructVariable(Window, int, nActButton);
+	defineStructVariable(Window, int, nActObject);
+	defineStructVariable(Window, int, nActObjectOffset);
+	defineStructVariable(Window, int, nActObject2);
+	defineStructVariable(Window, int, nActObject3);
+	defineStructVariable(Window, int, nActObject4);
+	
+}
+
+//functions
+///////////////////////////
+
+// same as clicking on a building
+defineInstruction(Window_OpenBuildingWindow, 1007, int);
+
+// get index of topmost window, or -1 if no windows are open
+defineInstruction(Window_GetLastWindow, 1008, int);
+
+// set new screen position for selected window
+defineInstruction(Window_SetWindowPosition, 1009, int, float, float);
+
+// same as clicking on a vehicle
+defineInstruction(Window_OpenVehicleWindow, 81000, int);
+
+// get number of windows
+defineInstruction(Window_GetNumberOfWindows, 81001, int);
+
+
+
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+// Connections
+//////////////////////////////////////////
+//////////////////////////////////////////
+
+
+//data struct
+///////////////////////////
+defineStruct(Connection, 108)
+{
+
+	defineStructInstruction(Connection, GetDataByIndex, 90000, int, int);   // get connection data by building index and connection index
+	
+	defineStructVariable(Connection, int, nValidRead);
+	
+	defineStructVariable(Connection, int, nType);
+	defineStructVariable(Connection, char, bInput);
+	defineStructVariable(Connection, char, bOutput);
+	
+	defineStructVariable(Connection, vec3, vPosition);
+	defineStructVariable(Connection, vec3, vPositionCurve);
+	
+	defineStructVariable(Connection, int, nFragmentOfConnectionSecondaryIndex);
+	defineStructVariable(Connection, int, nFragmentOfConnectionIndex);
+	
+	defineStructVariable(Connection, char, bAllowPass);
+	defineStructVariable(Connection, char, bHeight);
+	defineStructVariable(Connection, char, bNotPickToTerrain);
+	
+	defineStructVariable(Connection, float, fHeightToTerrain);
+	
+	defineStructVariable(Connection, char, bIsOpen);
+	defineStructVariable(Connection, char, bIsBorder);
+}
+
+//functions
+///////////////////////////
+
+
+
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+// STATION_DESCRIPTION
+//////////////////////////////////////////
+//////////////////////////////////////////
+
+//data struct
+///////////////////////////
+defineStruct(StationDescription, 109)
+{
+	defineStructInstruction(StationDescription, GetDataLoadFromBuilding, 100000, int, int);   // get data by building index and station index
+	defineStructInstruction(StationDescription, GetDataUnloadFromBuilding, 100001, int, int);   // get data by building index and station index
+	
+	defineStructVariable(StationDescription, int, nValidRead);
+	
+	
+	defineStructVariable(StationDescription, char, bActive);
+	defineStructVariable(StationDescription, float, fPercent);
+	defineStructVariable(StationDescription, int, nResources);
+	
+	defineStructVariable(StationDescription, char, bWorkers);
+	defineStructArray(StationDescription, char[3], bWorkersEducation);
+	
+	defineStructVariable(StationDescription, char, bPassangers);
+	
+	defineStructVariable(StationDescription, char, bChilds);
+	defineStructArray(StationDescription, char[2], bChildsEducation);
+	
+	defineStructVariable(StationDescription, char, bNotWait);
+	
+	defineStructVariable(StationDescription, int, nTypeNewUsedVehicle);
+	defineStructVariable(StationDescription, int, nTypeNewUsedTrain);
+	
+	defineStructVariable(StationDescription, int, nSelectedVehicleGroups);
+	defineStructVariable(StationDescription, int, nSelectedTrainGroups);
+	
+	defineStructVariable(StationDescription, int, nSelectedVehicleResources);
+	defineStructVariable(StationDescription, int, nSelectedTrainResources);
+	
+	defineStructVariable(StationDescription, int, nSelectedVehicleTypes);
+	defineStructVariable(StationDescription, int, nSelectedTrainTypes);
+}
+
+//functions
+///////////////////////////
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+// Storages
+//////////////////////////////////////////
+//////////////////////////////////////////
+
+//data struct
+///////////////////////////
+defineStruct(Storage, 110)
+{
+	defineStructInstruction(Storage, GetStorageResourceFromBuilding, 110000, int, int);   // get Storage_Resource by building index
+	defineStructInstruction(Storage, GetStorageResourceFromBuildingTag, 110001, string, int);   // get Storage_Resource by building tag
+	
+	defineStructVariable(Storage, int, nValidRead);
+	
+	defineStructVariable(Storage, int, nResources);
+	defineStructVariable(Storage, int, nResourcesBallance);
+	defineStructVariable(Storage, float, fIncrease);
+	
+	defineStructVariable(Storage, char, bImport);
+	defineStructVariable(Storage, char, bExport);
+	
+	defineStructVariable(Storage, int, nDemandType);
+	
+	defineStructVariable(Storage, int, fCapacity);
+	defineStructVariable(Storage, int, nStorageType);
+	defineStructVariable(Storage, int, nUsage);
+}
+
+//functions
+///////////////////////////
+
+
+
+
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+// Airplane Runways
+//////////////////////////////////////////
+//////////////////////////////////////////
+
+//data struct
+///////////////////////////
+defineStruct(Runway, 111)
+{
+	defineStructInstruction(Runway, GetDataByIndex, 111000, int);
+	
+	defineStructVariable(Runway, int, nValidRead);
+	defineStructVariable(Runway, float, fTotalLength);
+	defineStructVariable(Runway, char, bFinished);
+}
+
+//functions
+///////////////////////////
+
+defineInstruction(Runway_GetNumberOfRunways, 111100, int);
+
+
 
 
 
@@ -1100,7 +1619,7 @@ defineVariable(int, BUILDINGTYPE_COURT_HOUSE);
 defineVariable(int, BUILDINGTYPE_PRISON);
 defineVariable(int, BUILDINGTYPE_SECRET_POLICE);
 defineVariable(int, BUILDINGTYPE_UNKNOWN);
-defineVariable(int, BUILDINGTYPE_SNOWPLOW_OFFICE);
+defineVariable(int, BUILDINGTYPE_TECHNICAL_OFFICE);
 defineVariable(int, BUILDINGTYPE_HOTEL);
 defineVariable(int, BUILDINGTYPE_ATTRACTION);
 defineVariable(int, BUILDINGTYPE_PEDESTRIAN_BRIDGE);
@@ -1146,6 +1665,14 @@ defineVariable(int, BUILDINGSUBTYPE_UNKNOWN);
 defineVariable(int, BUILDINGSUBTYPE_PRIORITY_1);
 defineVariable(int, BUILDINGSUBTYPE_PRIORITY_2);
 
+//_SOVIET_WORKER_ATTRACTIVE_TYPE
+defineVariable(int, WORKER_ATTRACTIVE_GALLERY);
+defineVariable(int, WORKER_ATTRACTIVE_CARUSEL);
+defineVariable(int, WORKER_ATTRACTIVE_SWIM);
+defineVariable(int, WORKER_ATTRACTIVE_MUSEUM);
+defineVariable(int, WORKER_ATTRACTIVE_SIGHT);
+defineVariable(int, WORKER_ATTRACTIVE_ZOO);
+
 //SOVIET_MINE_RESOURCE
 defineVariable(int, SOVIET_MINE_RESOURCE_OIL);
 defineVariable(int, SOVIET_MINE_RESOURCE_IRON);
@@ -1157,8 +1684,6 @@ defineVariable(int, SOVIET_MINE_RESOURCE_URANIUM);
 defineVariable(int, SOVIET_MINE_RESOURCE_BAUXITE);
 defineVariable(int, SOVIET_MINE_RESOURCE_WATER);
 defineVariable(int, SOVIET_MINE_RESOURCE_WATER_SURFACE);
-
-
 
 //VEHICLESKILL
 defineVariable(int, VEHICLESKILL_HARVESTING);
@@ -1185,8 +1710,6 @@ defineVariable(int, VEHICLESKILL_POLICE);
 defineVariable(int, VEHICLESKILL_POLICEBUS);
 defineVariable(int, VEHICLESKILL_WASTE_CONTAINER_BIG);
 defineVariable(int, VEHICLESKILL_WASTE_CONTAINER_SMALL);
-
-
 
 
 //VEHICLETYPE
@@ -1236,6 +1759,148 @@ defineVariable(int, PERSON_STATUS_RELIGION);
 defineVariable(int, PERSON_STATUS_CLOTHING);
 defineVariable(int, PERSON_STATUS_ELECTRONIC);
 defineVariable(int, PERSON_STATUS_CRIME);
+
+
+defineVariable(int, SOVIET_BUILDING_CONNECTION_ROAD);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_RAIL);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_PEDESTRIAN);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_CONNECTION);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_OIL);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_CEMENT);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_GRAVEL);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_ELETRIC_HIGH);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_ELETRIC_LOW);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_CABLEWAY);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_AIRPORT);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_HEATING_SMALL);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_HEATING_BIG);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_STEAM);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_BULK);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_FENCE);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_WATER);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_WATERPIPE);
+defineVariable(int, SOVIET_BUILDING_CONNECTION_SEWAGEPIPE);
+
+
+defineVariable(int, SOVIET_ROADTYPE_ROAD);
+defineVariable(int, SOVIET_ROADTYPE_RAIL);
+defineVariable(int, SOVIET_ROADTYPE_RAIL_SECONDARY);
+defineVariable(int, SOVIET_ROADTYPE_ROAD_SECONDARY);
+defineVariable(int, SOVIET_ROADTYPE_PEDESTRIAN);
+defineVariable(int, SOVIET_ROADTYPE_CONNECTION);
+defineVariable(int, SOVIET_ROADTYPE_CONVEYOR);
+defineVariable(int, SOVIET_ROADTYPE_PIPE);
+defineVariable(int, SOVIET_ROADTYPE_ELETRIC_HIGH);
+defineVariable(int, SOVIET_ROADTYPE_ELETRIC_LOW);
+defineVariable(int, SOVIET_ROADTYPE_WATER);
+defineVariable(int, SOVIET_ROADTYPE_CABLEWAY);
+defineVariable(int, SOVIET_ROADTYPE_AIRPORT);
+defineVariable(int, SOVIET_ROADTYPE_HEATING);
+defineVariable(int, SOVIET_ROADTYPE_FENCE);
+defineVariable(int, SOVIET_ROADTYPE_PLUMBING);
+
+
+defineVariable(int, SOVIET_OBJECT_BUILDING);
+defineVariable(int, SOVIET_OBJECT_VEHICLE);
+defineVariable(int, SOVIET_OBJECT_WORKER);
+defineVariable(int, SOVIET_OBJECT_NAMEPOINT);
+defineVariable(int, SOVIET_OBJECT_NONE);
+defineVariable(int, SOVIET_OBJECT_NOTIFICATION_MESSAGE);
+defineVariable(int, SOVIET_OBJECT_GLOBAL_EVENT);
+defineVariable(int, SOVIET_OBJECT_QUESTION);
+defineVariable(int, SOVIET_OBJECT_LINE);
+defineVariable(int, SOVIET_OBJECT_WINDOW);
+defineVariable(int, SOVIET_OBJECT_CROSSROAD);
+defineVariable(int, SOVIET_OBJECT_ROAD_SIGN);
+defineVariable(int, SOVIET_OBJECT_REPLACE);
+defineVariable(int, SOVIET_OBJECT_STATION_DESCRIPTION);
+defineVariable(int, SOVIET_OBJECT_USED_VEHICLE);
+defineVariable(int, SOVIET_OBJECT_SCRIPT);
+
+defineVariable(int, WINDOW_ERROR_NONE);
+defineVariable(int, WINDOW_ERROR_OK);
+defineVariable(int, WINDOW_ERROR_SELL);
+defineVariable(int, WINDOW_ERROR_DEMOLISH);
+defineVariable(int, WINDOW_ERROR_QUIT);
+defineVariable(int, WINDOW_ERROR_SAVING);
+defineVariable(int, WINDOW_ERROR_SAVE_OVERWRITE);
+defineVariable(int, WINDOW_ERROR_SAVE_NEW);
+defineVariable(int, WINDOW_ERROR_RENAME);
+defineVariable(int, WINDOW_ERROR_AUTOSAVE);
+defineVariable(int, WINDOW_ERROR_EMPTY);
+defineVariable(int, WINDOW_ERROR_SAVE_OVERWRITE2);
+defineVariable(int, WINDOW_ERROR_BUILDING_CAPTION);
+defineVariable(int, WINDOW_ERROR_CLOSE_WINDOW);
+defineVariable(int, WINDOW_ERROR_TREE_REMOVE);
+defineVariable(int, WINDOW_ERROR_CHANGE_SETTINGS);
+defineVariable(int, WINDOW_ERROR_CHANGE_SETTINGS2);
+defineVariable(int, WINDOW_ERROR_EDITOR_CHANGE_TYPE);
+defineVariable(int, WINDOW_ERROR_SELL_ALL_VEHICLES);
+defineVariable(int, WINDOW_ERROR_CUT_COST_100);
+defineVariable(int, WINDOW_ERROR_FILL_WITH_TREES);
+defineVariable(int, WINDOW_ERROR_SAVE_OVERWRITE_EXISTING);
+defineVariable(int, WINDOW_ERROR_LOAD_IN_GAME);
+defineVariable(int, WINDOW_ERROR_LOAD_SAVE);
+defineVariable(int, WINDOW_ERROR_DELETE_LOADSAVE_INGAME);
+defineVariable(int, WINDOW_ERROR_DELETE_NOTIFICATIONS);
+defineVariable(int, WINDOW_ERROR_NEXT_TUTORIAL);
+defineVariable(int, WINDOW_ERROR_TUTORIAL_COMPLETED);
+defineVariable(int, WINDOW_ERROR_STARTSCRIPT);
+defineVariable(int, WINDOW_ERROR_TOOL_TERRAIN);
+defineVariable(int, WINDOW_ERROR_LOAD_MISSING_WORKSHOP);
+defineVariable(int, WINDOW_ERROR_QUIT_TO_WIN);
+defineVariable(int, WINDOW_ERROR_BORDER_SAVE_PROBLEM);
+defineVariable(int, WINDOW_ERROR_RECONSTRUCTION);
+defineVariable(int, WINDOW_ERROR_RESEARCH);
+defineVariable(int, WINDOW_ERROR_SCRIPT_COMPILE);
+defineVariable(int, WINDOW_ERROR_RESOURCES_ALL);
+defineVariable(int, WINDOW_ERROR_ENDSCRIPT);
+defineVariable(int, WINDOW_ERROR_ENDALLSCRIPTS);
+defineVariable(int, WINDOW_ERROR_SCRIPT_OBJECTIVE_WINDOW);
+defineVariable(int, WINDOW_ERROR_SCRIPT_POINTER_WINDOW);
+defineVariable(int, WINDOW_ERROR_SCENARIO_TREE);
+
+defineVariable(int, PURCHASE_TYPE_NONE);
+defineVariable(int, PURCHASE_TYPE_USD);
+defineVariable(int, PURCHASE_TYPE_RUB);
+defineVariable(int, PURCHASE_TYPE_RES_USD);
+defineVariable(int, PURCHASE_TYPE_RES_RUB);
+defineVariable(int, PURCHASE_TYPE_BLUEPRINT_USD);
+defineVariable(int, PURCHASE_TYPE_BLUEPRINT_RUB);
+defineVariable(int, PURCHASE_TYPE_PRODUCTION);
+defineVariable(int, PURCHASE_TYPE_CONSTRUCTION);
+defineVariable(int, PURCHASE_TYPE_VEHICLES_CAN_LOAD);
+defineVariable(int, PURCHASE_TYPE_WHERE_CAN_BE_LOADED);
+defineVariable(int, PURCHASE_TYPE_REPLACE);
+defineVariable(int, PURCHASE_TYPE_STATION_DES_ROAD);
+defineVariable(int, PURCHASE_TYPE_STATION_DES_RAIL);
+defineVariable(int, PURCHASE_TYPE_DEMOLITION);
+
+defineVariable(int, WINDOW_TINY);
+defineVariable(int, WINDOW_SMALL);
+defineVariable(int, WINDOW_MEDIUMSMALL);
+defineVariable(int, WINDOW_MEDIUM);
+defineVariable(int, WINDOW_BIG);
+defineVariable(int, WINDOW_MINY);
+
+
+defineVariable(int, WORKERDEMAND_GODS);
+defineVariable(int, WORKERDEMAND_GODS_HIDDEN);
+defineVariable(int, WORKERDEMAND_PUB);
+defineVariable(int, WORKERDEMAND_RELIGION);
+defineVariable(int, WORKERDEMAND_CULTURE);
+defineVariable(int, WORKERDEMAND_SPORT);
+defineVariable(int, WORKERDEMAND_HOSPITAL);
+defineVariable(int, WORKERDEMAND_UNKNOWN);
+
+defineVariable(int, STATIONPARKING_TYPE_ROAD);
+defineVariable(int, STATIONPARKING_TYPE_ROAD_PARKING_PERSONAL);
+defineVariable(int, STATIONPARKING_TYPE_SHIP);
+defineVariable(int, STATIONPARKING_TYPE_AIRPLANE_30M);
+defineVariable(int, STATIONPARKING_TYPE_AIRPLANE_40M);
+defineVariable(int, STATIONPARKING_TYPE_AIRPLANE_50M);
+defineVariable(int, STATIONPARKING_TYPE_AIRPLANE_75M);
+defineVariable(int, STATIONPARKING_TYPE_HELIPORT);
 
 
 // if you want to use constants call this function at the start of your script
@@ -1325,7 +1990,7 @@ defineFunction(InitConstants, void)
 
 	BUILDINGTYPE_UNKNOWN = 30;
 
-	BUILDINGTYPE_SNOWPLOW_OFFICE = 49;
+	BUILDINGTYPE_TECHNICAL_OFFICE = 49;
 
 	BUILDINGTYPE_HOTEL = 50;
 	BUILDINGTYPE_ATTRACTION = 51;
@@ -1388,6 +2053,14 @@ defineFunction(InitConstants, void)
 
 
 
+	//SOVIET_WORKER_ATTRACTIVE_TYPE
+	WORKER_ATTRACTIVE_GALLERY = 0;
+	WORKER_ATTRACTIVE_CARUSEL = 1;
+	WORKER_ATTRACTIVE_SWIM = 2;
+	WORKER_ATTRACTIVE_MUSEUM = 3;
+	WORKER_ATTRACTIVE_SIGHT = 4;
+
+
 
 	//SOVIET_MINE_RESOURCE
 	SOVIET_MINE_RESOURCE_OIL = 0;
@@ -1402,6 +2075,30 @@ defineFunction(InitConstants, void)
 	SOVIET_MINE_RESOURCE_WATER_SURFACE = 9;
 	
 	
+	
+	
+	//SOVIET_BUILDING_CONNECTION_TYPE
+	SOVIET_BUILDING_CONNECTION_ROAD = 0;
+	SOVIET_BUILDING_CONNECTION_RAIL = 1;
+	SOVIET_BUILDING_CONNECTION_PEDESTRIAN = 2;
+	SOVIET_BUILDING_CONNECTION_CONNECTION = 3;
+	SOVIET_BUILDING_CONNECTION_OIL = 4;
+	SOVIET_BUILDING_CONNECTION_CEMENT = 5;
+	SOVIET_BUILDING_CONNECTION_GRAVEL = 6;
+	SOVIET_BUILDING_CONNECTION_ELETRIC_HIGH = 7;
+	SOVIET_BUILDING_CONNECTION_ELETRIC_LOW = 8;
+	SOVIET_BUILDING_CONNECTION_CABLEWAY = 9;
+	SOVIET_BUILDING_CONNECTION_AIRPORT = 10;
+	SOVIET_BUILDING_CONNECTION_HEATING_SMALL = 11;
+	SOVIET_BUILDING_CONNECTION_HEATING_BIG = 12;
+	SOVIET_BUILDING_CONNECTION_STEAM = 15;
+	SOVIET_BUILDING_CONNECTION_BULK = 16;
+	SOVIET_BUILDING_CONNECTION_FENCE = 17;
+	SOVIET_BUILDING_CONNECTION_WATER = 18;
+	SOVIET_BUILDING_CONNECTION_WATERPIPE = 19;
+	SOVIET_BUILDING_CONNECTION_SEWAGEPIPE = 20;
+	
+
 	
 	
 	//VEHICLESKILL
@@ -1445,6 +2142,26 @@ defineFunction(InitConstants, void)
 	
 	
 	
+	//SOVIET_ROADTYPE
+	SOVIET_ROADTYPE_ROAD = 0;
+	SOVIET_ROADTYPE_RAIL = 1;
+	SOVIET_ROADTYPE_RAIL_SECONDARY = 2;
+	SOVIET_ROADTYPE_ROAD_SECONDARY = 3;
+	SOVIET_ROADTYPE_PEDESTRIAN = 4;
+	SOVIET_ROADTYPE_CONNECTION = 5;
+	SOVIET_ROADTYPE_CONVEYOR = 6;
+	SOVIET_ROADTYPE_PIPE = 7;
+	SOVIET_ROADTYPE_ELETRIC_HIGH = 8;
+	SOVIET_ROADTYPE_ELETRIC_LOW = 9;
+	SOVIET_ROADTYPE_WATER = 11;
+	SOVIET_ROADTYPE_CABLEWAY = 12;
+	SOVIET_ROADTYPE_AIRPORT = 13;
+	SOVIET_ROADTYPE_HEATING = 14;
+	SOVIET_ROADTYPE_FENCE = 15;
+	SOVIET_ROADTYPE_PLUMBING = 16;
+	
+	
+	
 	//RESOURCE_TRANSPORT_TYPE
 	RESOURCE_TRANSPORT_COVERED = 0;
 	RESOURCE_TRANSPORT_OPEN = 1;
@@ -1478,6 +2195,117 @@ defineFunction(InitConstants, void)
 	PERSON_STATUS_CLOTHING = 8;
 	PERSON_STATUS_ELECTRONIC = 9;
 	PERSON_STATUS_CRIME = 10;
+	
+	
+	// SOVIET_OBJECT_TYPE
+	SOVIET_OBJECT_BUILDING = 0;
+	SOVIET_OBJECT_VEHICLE = 1;
+	SOVIET_OBJECT_WORKER = 2;
+	SOVIET_OBJECT_NAMEPOINT = 3;
+	SOVIET_OBJECT_NONE = 4;
+	SOVIET_OBJECT_NOTIFICATION_MESSAGE = 5;
+	SOVIET_OBJECT_GLOBAL_EVENT = 6;
+	SOVIET_OBJECT_QUESTION = 7;
+	SOVIET_OBJECT_LINE = 8;
+	SOVIET_OBJECT_WINDOW = 9;
+	SOVIET_OBJECT_CROSSROAD = 10;
+	SOVIET_OBJECT_ROAD_SIGN = 11;
+	SOVIET_OBJECT_REPLACE = 12;
+	SOVIET_OBJECT_STATION_DESCRIPTION = 13;
+	SOVIET_OBJECT_USED_VEHICLE = 14;
+	SOVIET_OBJECT_SCRIPT = 15;
+
+	// WINDOW_ERROR_TYPE
+	WINDOW_ERROR_NONE = 0;
+	WINDOW_ERROR_OK = 1;
+	WINDOW_ERROR_SELL = 2;
+	WINDOW_ERROR_DEMOLISH = 3;
+	WINDOW_ERROR_QUIT = 4;
+	WINDOW_ERROR_SAVING = 5;
+	WINDOW_ERROR_SAVE_OVERWRITE = 6;
+	WINDOW_ERROR_SAVE_NEW = 7;
+	WINDOW_ERROR_RENAME = 8;
+	WINDOW_ERROR_AUTOSAVE = 9;
+	WINDOW_ERROR_EMPTY = 10;
+	WINDOW_ERROR_SAVE_OVERWRITE2 = 11;
+	WINDOW_ERROR_BUILDING_CAPTION = 12;
+	WINDOW_ERROR_CLOSE_WINDOW = 13;
+	WINDOW_ERROR_TREE_REMOVE = 14;
+	WINDOW_ERROR_CHANGE_SETTINGS = 15;
+	WINDOW_ERROR_CHANGE_SETTINGS2 = 16;
+	WINDOW_ERROR_EDITOR_CHANGE_TYPE = 17;
+	WINDOW_ERROR_SELL_ALL_VEHICLES = 18;
+	WINDOW_ERROR_CUT_COST_100 = 19;
+	WINDOW_ERROR_FILL_WITH_TREES = 20;
+	WINDOW_ERROR_SAVE_OVERWRITE_EXISTING = 21;
+	WINDOW_ERROR_LOAD_IN_GAME = 22;
+	WINDOW_ERROR_LOAD_SAVE = 23;
+	WINDOW_ERROR_DELETE_LOADSAVE_INGAME = 24;
+	WINDOW_ERROR_DELETE_NOTIFICATIONS = 25;
+	WINDOW_ERROR_NEXT_TUTORIAL = 26;
+	WINDOW_ERROR_TUTORIAL_COMPLETED = 27;
+	WINDOW_ERROR_STARTSCRIPT = 28;
+	WINDOW_ERROR_TOOL_TERRAIN = 29;
+	WINDOW_ERROR_LOAD_MISSING_WORKSHOP = 30;
+	WINDOW_ERROR_QUIT_TO_WIN = 31;
+	WINDOW_ERROR_BORDER_SAVE_PROBLEM = 32;
+	WINDOW_ERROR_RECONSTRUCTION = 33;
+	WINDOW_ERROR_RESEARCH = 34;
+	WINDOW_ERROR_SCRIPT_COMPILE = 35;
+	WINDOW_ERROR_RESOURCES_ALL = 36;
+	WINDOW_ERROR_ENDSCRIPT = 37;
+	WINDOW_ERROR_ENDALLSCRIPTS = 38;
+	WINDOW_ERROR_SCRIPT_OBJECTIVE_WINDOW = 39;
+	WINDOW_ERROR_SCRIPT_POINTER_WINDOW = 40;
+	WINDOW_ERROR_SCENARIO_TREE = 41;
+	
+	// PURCHASE_TYPE
+	PURCHASE_TYPE_NONE = 0;
+	PURCHASE_TYPE_USD = 1;
+	PURCHASE_TYPE_RUB = 2;
+	PURCHASE_TYPE_RES_USD = 3;
+	PURCHASE_TYPE_RES_RUB = 4;
+	PURCHASE_TYPE_BLUEPRINT_USD = 5;
+	PURCHASE_TYPE_BLUEPRINT_RUB = 6;
+	PURCHASE_TYPE_PRODUCTION = 7;
+	PURCHASE_TYPE_CONSTRUCTION = 8;
+	PURCHASE_TYPE_VEHICLES_CAN_LOAD = 9;
+	PURCHASE_TYPE_WHERE_CAN_BE_LOADED = 10;
+	PURCHASE_TYPE_REPLACE = 11;
+	PURCHASE_TYPE_STATION_DES_ROAD = 12;
+	PURCHASE_TYPE_STATION_DES_RAIL = 13;
+	PURCHASE_TYPE_DEMOLITION = 14;
+	
+	// WINDOW_TYPE
+	WINDOW_TINY = 1;
+	WINDOW_SMALL = 0;
+	WINDOW_MEDIUMSMALL = 2;
+	WINDOW_MEDIUM = 3;
+	WINDOW_BIG = 4;
+	WINDOW_MINY = 5;
+	
+	
+	// SOVIET_WORKER_DEMAND_TYPE
+	WORKERDEMAND_GODS = 1;
+	WORKERDEMAND_GODS_HIDDEN = 2;
+	WORKERDEMAND_PUB = 3;
+	WORKERDEMAND_RELIGION = 4;
+	WORKERDEMAND_CULTURE = 5;
+	WORKERDEMAND_SPORT = 6;
+	WORKERDEMAND_HOSPITAL = 10;
+	WORKERDEMAND_UNKNOWN = 15;
+	
+	
+	// SOVIET_BUILDING_STATION
+	STATIONPARKING_TYPE_ROAD = -1;
+	STATIONPARKING_TYPE_ROAD_PARKING_PERSONAL = 100;
+	STATIONPARKING_TYPE_SHIP = 20;
+	STATIONPARKING_TYPE_AIRPLANE_30M = 31;
+	STATIONPARKING_TYPE_AIRPLANE_40M = 32;
+	STATIONPARKING_TYPE_AIRPLANE_50M = 33;
+	STATIONPARKING_TYPE_AIRPLANE_75M = 35;
+	STATIONPARKING_TYPE_HELIPORT = 34;
+	
 	
 	
 	returnVoid();
