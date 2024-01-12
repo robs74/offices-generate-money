@@ -14,6 +14,7 @@ defineVariable(float, price_inertia);
 defineVariable(int, population);
 defineVariable(int, workers);
 defineVariable(float, services);
+defineVariable(int, services_int);
 defineVariable(int, demand);
 defineVariable(float, demand_vehicles);
 defineVariable(float, vehicle_cost);
@@ -44,7 +45,7 @@ defineVariable(int, random_is_fire);
 defineVariable(int, random_building_id);
 defineVariable(vec3, vector);
 
-//defineVariable(GameSetting, game);
+defineVariable(GameSetting, game);
 
 defineFunction(CalculateVehicleDemand, float)
 {
@@ -143,9 +144,10 @@ defineFunction(CalculateDemand, int)
 }
 defineFunction(CalculateSupply, int)
 {
-	services = 0.0;
+	supply = 0;
 	for (i=0, i<n, i=i+1)
 	{
+		services = 0.0;
 		building.GetDataByIndex(i);
 		if(building.nType ? BUILDINGTYPE_CITYHALL & building.fPercFinished > 0.9999)
 		{
@@ -165,12 +167,28 @@ defineFunction(CalculateSupply, int)
 				services = services + service_scale;
 			}
 		}
+		if(building.nType ? BUILDINGTYPE_UNIVERSITY & building.nSubType ? BUILDINGSUBTYPE_SOVIET & building.fPercFinished > 0.9999)
+		{
+			for (j=0, j<building.nWorkersNum, j=j+1)
+			{
+				Building_Workers_GetID(i, j, worker_id);
+				worker.GetDataByIndex(worker_id);
+				if (worker.bWorkplaceAsProfesor ? 1) {
+					services = services + HQ_FACTOR;
+				}
+			}
+		}
+		if(building.fEletric_Voltage < 0.9 & game.EletricityLevel > 0)
+		{
+			services = services * NO_POWER_FACTOR;
+		}
+		if(building.fWater_CurrentDrinkAmount < 0.001 & game.WaterManagement > 0)
+		{
+			services = services * NO_WATER_FACTOR;
+		}
+		services_int = services;
+		supply = supply + services_int;
 	}
-	//if(building.fEletric_Voltage < 0.9 & game.EletricityLevel > 0)
-	//{
-	//	services = services * NO_POWER_FACTOR;
-	//}
-	supply = services;
 	return(supply);
 }
 //currency: 1 - rubles, 0 - dollars, excess: >0 - export, <0 - import
@@ -242,6 +260,7 @@ defineFunction(Money, void, float:rub, float:usd)
 	Script_GetGameTime(game_time_prev);
 	while (1 ? 1)
 	{
+		game.GetCurrentGameSettigns();
 		rub_sum2 = 0;
 		usd_sum2 = 0;
 		k = 0;
