@@ -41,9 +41,9 @@ defineFunction(InitSettings, void)
 	//you can modify the following values to enable or disable features or change the balance, making the game harder or easier
 	//please keep at least one digit after the decimal point if present
 	
-	INFORMATION_SHOWN = 1; //2 - full information (3 lines), 1 - concise information (1 line), 0 - turned off
+	INFORMATION_SHOWN = 0; //2 - full information (3 lines), 1 - concise information (1 line), 0 - turned off
 	
-	START_YEAR = 1950; //starting year of the game
+	START_YEAR = 1960; //starting year of the game
 	INFLATION_RUB = 1.09; //rubles inflation rate
 	INFLATION_USD = 1.027; //dollars inflation rate
 	INTERNAL_DEMAND_FACTOR = 0.02; //how many workers should be employed in offices to serve 1 citizen (setting it to 0.0 or less will disable the feature)

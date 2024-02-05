@@ -34,6 +34,12 @@ defineVariable(int, usd_sum2);
 defineVariable(float, game_time);
 defineVariable(float, game_time_prev);
 defineVariable(float, time_factor);
+defineVariable(int, windows_count);
+defineVariable(int, window_exists);
+defineVariable(Window, window);
+defineVariable(int, clicked_building_id);
+defineArray(char[200], text);
+defineVariable(char, NEWLINE);
 
 // Worker for which we are computing the fee
 defineVariable(Person, worker);
@@ -243,6 +249,7 @@ defineFunction(Money, void, float:rub, float:usd)
 {
 	InitConstants();
 	InitSettings();
+    NEWLINE = 10; // ASCII LF
 	//check correctness of the constants in the settings file
 	INFLATION_RUB = MaxFloat(INFLATION_RUB, 1.0);
 	INFLATION_USD = MaxFloat(INFLATION_USD, 1.0);
@@ -264,6 +271,7 @@ defineFunction(Money, void, float:rub, float:usd)
 		rub_sum2 = 0;
 		usd_sum2 = 0;
 		k = 0;
+		clicked_building_id = -1;
 		while(k < 10)
 		{
 			Script_GetGameTime(game_time);
@@ -304,6 +312,53 @@ defineFunction(Money, void, float:rub, float:usd)
 				Objective_Remove("services");
 				Objective_Remove("service_price");
 				Objective_Remove("services_balance");
+				Window_GetNumberOfWindows(windows_count);
+				if(windows_count ? 0)
+				{
+					clicked_building_id = -1;
+				}
+				for (i=0, i<windows_count, i=i+1)
+				{
+					window.GetDataByIndex(i);
+					if (window.nValidRead)
+					{
+						if (window.nReferenceObjectType ? SOVIET_OBJECT_BUILDING & !(clicked_building_id ? window.nRefObjectIndex))
+						{
+							clicked_building_id = window.nRefObjectIndex;
+							building.GetDataByIndex(clicked_building_id);
+							Scenario_WindowExists(window_exists);
+							if(building.nType ? BUILDINGTYPE_CITYHALL & building.fPercFinished > 0.9999 & !window_exists)
+							{
+								strcpy(text, "");
+								
+								strcat(text, "Services produced: ");
+								strcat(text, supply);
+								strcat(text, NEWLINE);
+								
+								strcat(text, "Services needed: ");
+								strcat(text, demand);
+								strcat(text, NEWLINE); 
+								
+								strcat(text, "Services price (rubles): ");
+								strcat(text, current_price_rub);
+								strcat(text, NEWLINE);
+								
+								strcat(text, "Services price (dollars): ");
+								strcat(text, current_price_usd);
+								strcat(text, NEWLINE);
+								
+								strcat(text, "Last day services balance (rubles): ");
+								strcat(text, rub_sum);
+								strcat(text, NEWLINE);
+								
+								strcat(text, "Last day services balance (dollars): ");
+								strcat(text, usd_sum);
+								
+								Scenario_WindowWithImageLeft("Services overview", text, "services_icon.png", 2);
+							}
+						}
+					}
+				}
 				if(INFORMATION_SHOWN > 0)
 				{
 					if(INTERNAL_DEMAND_FACTOR > 0.0 & INFORMATION_SHOWN > 1)
