@@ -34,10 +34,10 @@ defineVariable(int, usd_sum2);
 defineVariable(float, game_time);
 defineVariable(float, game_time_prev);
 defineVariable(float, time_factor);
-defineVariable(int, windows_count);
+defineVariable(int, window_id);
 defineVariable(int, window_exists);
 defineVariable(Window, window);
-defineVariable(int, clicked_building_id);
+defineVariable(int, clicked_object_id);
 defineArray(char[200], text);
 defineVariable(char, NEWLINE);
 
@@ -217,9 +217,9 @@ defineFunction(MakePeopleAngry, void, float:unpaid_services)
 	for(i=0, i<population, i=i+1)
 	{
 		worker.GetDataByIndex(i);
-		Person_SetStatus(i, 0, MaxFloat(worker.fStatusHappiness - unpaid_services * UNHAPPINESS_FACTOR / 10.0, 0.0)) //decrease happiness
-		Person_SetStatus(i, 3, MaxFloat(worker.fStatusSoviet - unpaid_services * LOYALTY_FACTOR / 10.0, 0.0)) //decrease loyalty
-		Person_SetStatus(i, 10, MinFloat(worker.fStatusCrime + unpaid_services * CRIME_FACTOR / 10.0, 1.0))//increase crime
+		Person_SetStatus(i, 0, MaxFloat(worker.fStatusHappiness - unpaid_services * UNHAPPINESS_FACTOR / 20.0, 0.0)) //decrease happiness
+		Person_SetStatus(i, 3, MaxFloat(worker.fStatusSoviet - unpaid_services * LOYALTY_FACTOR / 20.0, 0.0)) //decrease loyalty
+		Person_SetStatus(i, 10, MinFloat(worker.fStatusCrime + unpaid_services * CRIME_FACTOR / 20.0, 1.0))//increase crime
 	}
 	//increased probability of fire
 	if(FIRE_PROB_DENOMINATOR > 0)
@@ -271,13 +271,13 @@ defineFunction(Money, void, float:rub, float:usd)
 		rub_sum2 = 0;
 		usd_sum2 = 0;
 		k = 0;
-		clicked_building_id = -1;
-		while(k < 10)
+		clicked_object_id = -1;
+		while(k < 20)
 		{
 			Script_GetGameTime(game_time);
 			if(game_time > game_time_prev)
 			{
-				time_factor = (game_time - game_time_prev) / 10.0;
+				time_factor = (game_time - game_time_prev) / 25.0;
 				Script_EnterCriticalSection();
 				Building_GetNumberOfBuildings(n);
 				Money_GetRUB(money_rub);
@@ -312,49 +312,52 @@ defineFunction(Money, void, float:rub, float:usd)
 				Objective_Remove("services");
 				Objective_Remove("service_price");
 				Objective_Remove("services_balance");
-				Window_GetNumberOfWindows(windows_count);
-				if(windows_count ? 0)
+				Window_GetLastWindow(window_id);
+				if(window_id ? -1)
 				{
-					clicked_building_id = -1;
+					clicked_object_id = -1;
 				}
-				for (i=0, i<windows_count, i=i+1)
+				else()
 				{
-					window.GetDataByIndex(i);
+					window.GetDataByIndex(window_id);
 					if (window.nValidRead)
 					{
-						if (window.nReferenceObjectType ? SOVIET_OBJECT_BUILDING & !(clicked_building_id ? window.nRefObjectIndex))
+						if (window.nReferenceObjectType ? SOVIET_OBJECT_BUILDING & !(clicked_object_id ? window.nRefObjectIndex))
 						{
-							clicked_building_id = window.nRefObjectIndex;
-							building.GetDataByIndex(clicked_building_id);
-							Scenario_WindowExists(window_exists);
-							if(building.nType ? BUILDINGTYPE_CITYHALL & building.fPercFinished > 0.9999 & !window_exists)
+							clicked_object_id = window.nRefObjectIndex;
+							if(window.nReferenceObjectType ? SOVIET_OBJECT_BUILDING)
 							{
-								strcpy(text, "");
-								
-								strcat(text, "Services produced: ");
-								strcat(text, supply);
-								strcat(text, NEWLINE);
-								
-								strcat(text, "Services needed: ");
-								strcat(text, demand);
-								strcat(text, NEWLINE); 
-								
-								strcat(text, "Services price (rubles): ");
-								strcat(text, current_price_rub);
-								strcat(text, NEWLINE);
-								
-								strcat(text, "Services price (dollars): ");
-								strcat(text, current_price_usd);
-								strcat(text, NEWLINE);
-								
-								strcat(text, "Last day services balance (rubles): ");
-								strcat(text, rub_sum);
-								strcat(text, NEWLINE);
-								
-								strcat(text, "Last day services balance (dollars): ");
-								strcat(text, usd_sum);
-								
-								Scenario_WindowWithImageLeft("Services overview", text, "services_icon.png", 2);
+								building.GetDataByIndex(clicked_object_id);
+								Scenario_WindowExists(window_exists);
+								if(building.nType ? BUILDINGTYPE_CITYHALL & building.fPercFinished > 0.9999 & !window_exists)
+								{
+									strcpy(text, "");
+									
+									strcat(text, "Services produced: ");
+									strcat(text, supply);
+									strcat(text, NEWLINE);
+									
+									strcat(text, "Services needed: ");
+									strcat(text, demand);
+									strcat(text, NEWLINE); 
+									
+									strcat(text, "Services price (rubles): ");
+									strcat(text, current_price_rub);
+									strcat(text, NEWLINE);
+									
+									strcat(text, "Services price (dollars): ");
+									strcat(text, current_price_usd);
+									strcat(text, NEWLINE);
+									
+									strcat(text, "Last day services balance (rubles): ");
+									strcat(text, rub_sum);
+									strcat(text, NEWLINE);
+									
+									strcat(text, "Last day services balance (dollars): ");
+									strcat(text, usd_sum);
+									
+									Scenario_WindowWithImageLeft("Services overview", text, "services_icon.png", 2);
+								}
 							}
 						}
 					}
@@ -388,7 +391,7 @@ defineFunction(Money, void, float:rub, float:usd)
 				k = k+1;
 				Script_LeaveCriticalSection();
 			}
-			Script_Sleep(5.0);
+			Script_Sleep(2.5);
 		}
 		rub_sum = rub_sum2;
 		usd_sum = usd_sum2;
