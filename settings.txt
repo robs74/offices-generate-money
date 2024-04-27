@@ -1,5 +1,5 @@
 defineVariable(int, START_YEAR);
-defineVariable(int, FREE_CITIZENS);
+defineVariable(int, GRACE_CITIZENS);
 defineVariable(float, INFLATION_RUB);
 defineVariable(float, INFLATION_USD);
 defineVariable(float, INTERNAL_DEMAND_FACTOR);
@@ -14,7 +14,6 @@ defineVariable(float, UNHAPPINESS_FACTOR);
 defineVariable(float, LOYALTY_FACTOR);
 defineVariable(float, CRIME_FACTOR);
 defineVariable(int, FIRE_PROB_DENOMINATOR);
-defineVariable(int, GRACE_YEARS);
 defineVariable(float, GRACE_FACTOR);
 defineVariable(float, BASE_FOREIGN_SUPPLY_DEMAND);
 defineVariable(float, FOREIGN_SUPPLY_DEMAND_FACTOR);
@@ -43,13 +42,12 @@ defineFunction(InitSettings, void)
 	
 	INFORMATION_SHOWN = 0; //2 - full information (3 lines), 1 - concise information (1 line), 0 - turned off
 	
-	START_YEAR = 1960; //starting year of the game
+	START_YEAR = 0; //starting year of the game, if left to 0 the script will try to determine it based on your import history
 	INFLATION_RUB = 1.09; //rubles inflation rate
 	INFLATION_USD = 1.027; //dollars inflation rate
 	INTERNAL_DEMAND_FACTOR = 0.02; //how many workers should be employed in offices to serve 1 citizen (setting it to 0.0 or less will disable the feature)
-	FREE_CITIZENS = 0; //the number of citizens not needing any services (a negative value here will in turn increase the demand by a constant number)
-	GRACE_YEARS = 4; //the demand for services is decreased during the first years
-	GRACE_FACTOR = 0.5; //the decrease in demand in the first year (in the second year it's GRACE_FACTOR^2 and so on)
+	GRACE_CITIZENS = 7500; //the demand for services is decreased for your first GRACE_CITIZENS non-dormant citizens
+	GRACE_FACTOR = 0.5; //the decrease in demand for your first GRACE_CITIZENS non-dormant citizens
 	NUMBER_OF_PRICE_DECREASES = 0; //how many times have you used cheats to divide prices by 100, every time you use it in your save you should increase it by 1 and restart the script, otherwise the cost of services will not be divided by 100
 	
 	CAN_IMPORT_SERVICES = 1; //1 or more allows you to import services from abroad if you need them, with 0 or less you have to generate the necessary services yourself

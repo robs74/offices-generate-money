@@ -12,7 +12,6 @@ defineVariable(float, price);
 defineVariable(float, factor);
 defineVariable(float, price_inertia);
 defineVariable(int, population);
-defineVariable(int, workers);
 defineVariable(float, services);
 defineVariable(int, services_int);
 defineVariable(int, demand);
@@ -50,73 +49,10 @@ defineVariable(float, service_scale);
 defineVariable(int, random_is_fire);
 defineVariable(int, random_building_id);
 defineVariable(vec3, vector);
+defineVariable(StatRecord, stat_record);
 
 defineVariable(GameSetting, game);
 
-defineFunction(CalculateVehicleDemand, float)
-{
-	Vehicle_GetNumberOfVehicles(m);
-	demand_vehicles = 0.0;
-	for (i=0, i<m, i=i+1)
-	{
-		vehicle.GetDataByIndex(i);
-		vehicle_cost = 0.0;
-		if(vehicle.nTransportType ? RESOURCE_TRANSPORT_PASSANGER)
-		{
-			//for passenger vehicles, the cost is determined per 10 passengers
-			vehicle_cost = vehicle.fResourceCapacity / 10.0;
-		}
-		elseif(vehicle.nTransportType > -1 & vehicle.nTransportType < RESOURCE_TRANSPORT_NUM)
-		{
-			//for freight vehicles, the cost is determined per 1 t
-			vehicle_cost = vehicle.fResourceCapacity;
-		}
-		//road vehicles
-		if(vehicle.nVehicleType > 0 & vehicle.nVehicleType < 3)
-		{
-			if(month > 2 & month < 8 & vehicle.nSkill[0] ? VEHICLESKILL_SEEDING)
-			{
-				//seeding vehicles need more services during the season
-				demand_vehicles = demand_vehicles + BASE_COST_SEEDING;
-			}
-			elseif(month > 7 & month < 12 & vehicle.nSkill[0] ? VEHICLESKILL_HARVESTING)
-			{
-				//harvesting vehicles need more services during the season
-				demand_vehicles = demand_vehicles + BASE_COST_HARVESTING;
-			}
-			elseif((month > 11 | month < 3) & vehicle.nSkill[0] ? VEHICLESKILL_SNOWPLOW)
-			{
-				//snowplowing vehicles need more services during the season
-				demand_vehicles = demand_vehicles + BASE_COST_SNOWPLOWING;
-			}
-			elseif(vehicle.nSkill[0] ? VEHICLESKILL_PERSONAL)
-			{
-				//personal cars don't need that many services
-				demand_vehicles = demand_vehicles + BASE_COST_PERSONAL;
-			}
-			else()
-			{
-				demand_vehicles = demand_vehicles + BASE_COST_ROAD + COST_ROAD_FACTOR * vehicle_cost;
-			}
-		}
-		//trains
-		elseif(vehicle.nVehicleType < 6)
-		{
-			demand_vehicles = demand_vehicles + BASE_COST_RAIL + COST_RAIL_FACTOR * vehicle_cost;
-		}
-		//ships
-		elseif(vehicle.nVehicleType ? VEHICLETYPE_SHIP)
-		{
-			demand_vehicles = demand_vehicles + BASE_COST_SHIP + COST_SHIP_FACTOR * vehicle_cost;
-		}
-		//planes, helicopters
-		elseif(vehicle.nVehicleType ? VEHICLETYPE_AIRPLANE | vehicle.nVehicleType ? VEHICLETYPE_HELICOPTER)
-		{
-			demand_vehicles = demand_vehicles + BASE_COST_AIR + COST_AIR_FACTOR * vehicle_cost;
-		}
-	}
-	return(demand_vehicles);
-}
 defineFunction(CalculateDemand, int)
 {
  	population = 0;
@@ -125,26 +61,18 @@ defineFunction(CalculateDemand, int)
 		building.GetDataByIndex(i);
 		if(building.nType ? BUILDINGTYPE_LIVING & building.fPercFinished > 0.9999)
 		{
- 			is_active = 0;
-			for(j=0, j<building.nWalkingBuildingNum & is_active ? 0, j = j+1)
-			{
-				Building_WalkingBuilding_GetID(i, j, l);
-				building2.GetDataByIndex(l);
-				if(!(building2.nType ? BUILDINGTYPE_LIVING | building2.nType ? BUILDINGTYPE_CHURCH) & building2.nWorkersNum > 0)
-				{
-					is_active = 1;
-				}
-			}
-			//Building_IsOldTownActive(i, is_active);
+			Building_IsOldTownActive(i, is_active);
 			population = population + is_active * is_active * building.nWorkersNum;
 		}
 	}
-	workers = MaxInt(population - FREE_CITIZENS, 0);
-	demand = MaxFloat(workers * INTERNAL_DEMAND_FACTOR, 0.0);
-	//demand = demand + CalculateVehicleDemand();
-	if(year - START_YEAR < GRACE_YEARS)
+	demand = 0;
+	if(!(population > GRACE_CITIZENS))
 	{
-		demand = (1 - GRACE_FACTOR ^ (year - START_YEAR + 1)) * demand;
+		demand = population * INTERNAL_DEMAND_FACTOR * GRACE_FACTOR;
+	}
+	else()
+	{
+		demand = INTERNAL_DEMAND_FACTOR * (GRACE_CITIZENS * GRACE_FACTOR + population - GRACE_CITIZENS);
 	}
 	return(demand);
 }
@@ -155,7 +83,7 @@ defineFunction(CalculateSupply, int)
 	{
 		services = 0.0;
 		building.GetDataByIndex(i);
-		if(building.nType ? BUILDINGTYPE_CITYHALL & building.fPercFinished > 0.9999)
+		if(building.nType ? BUILDINGTYPE_CITYHALL & building.fPercFinished > 0.9999 & ! (building.nSubType ? BUILDINGSUBTYPE_ROAD))
 		{
 		    // For each worker currently in the building, add some services
 			for (j=0, j<building.nWorkersNum, j=j+1)
@@ -219,7 +147,7 @@ defineFunction(MakePeopleAngry, void, float:unpaid_services)
 		worker.GetDataByIndex(i);
 		Person_SetStatus(i, 0, MaxFloat(worker.fStatusHappiness - unpaid_services * UNHAPPINESS_FACTOR / 20.0, 0.0)) //decrease happiness
 		Person_SetStatus(i, 3, MaxFloat(worker.fStatusSoviet - unpaid_services * LOYALTY_FACTOR / 20.0, 0.0)) //decrease loyalty
-		Person_SetStatus(i, 10, MinFloat(worker.fStatusCrime + unpaid_services * CRIME_FACTOR / 20.0, 1.0))//increase crime
+		Person_SetStatus(i, 10, MinFloat(worker.fStatusCrime + unpaid_services * CRIME_FACTOR / 20.0, 1.0)) //increase crime
 	}
 	//increased probability of fire
 	if(FIRE_PROB_DENOMINATOR > 0)
@@ -265,6 +193,27 @@ defineFunction(Money, void, float:rub, float:usd)
 	usd_sum = 0;
 	Script_GetGameTime(game_time);
 	Script_GetGameTime(game_time_prev);
+	
+	//deduce the start year
+	if(START_YEAR ? 0)
+	{
+		Date_GetCurrentDate_D365Y(day, year);
+		i=1799;
+		while(i<year+1 & START_YEAR ? 0)
+		{
+			stat_record.GetFromDateToDate_D365Y(0, i, 0, i+1);
+			value = stat_record.Vehicles_ImportUSD + stat_record.Vehicles_ImportRUB + stat_record.ImportTonsRUB.gravel + stat_record.ImportTonsUSD.gravel;
+			if(value > 0)
+			{
+				START_YEAR = i;
+			}
+			i=i+1;
+		}
+		if(START_YEAR ? 1799)
+		{	
+			START_YEAR = year;
+		}
+	}
 	while (1 ? 1)
 	{
 		game.GetCurrentGameSettigns();
@@ -329,7 +278,7 @@ defineFunction(Money, void, float:rub, float:usd)
 							{
 								building.GetDataByIndex(clicked_object_id);
 								Scenario_WindowExists(window_exists);
-								if(building.nType ? BUILDINGTYPE_CITYHALL & building.fPercFinished > 0.9999 & !window_exists)
+								if(building.nType ? BUILDINGTYPE_CITYHALL & building.fPercFinished > 0.9999 & ! (building.nSubType ? BUILDINGSUBTYPE_ROAD) & !window_exists)
 								{
 									strcpy(text, "");
 									

@@ -6,8 +6,10 @@ defineVariable(int, money);
 defineVariable(float, max);
 defineVariable(float, min);
 defineVariable(int, imax);
+defineVariable(float, exponent);
 defineVariable(float, value_change_rub);
 defineVariable(float, value_change_usd);
+defineVariable(char, script);
 
 defineFunction(Clamp, float, float:x, float:y, float:z)
 {
@@ -79,7 +81,22 @@ defineFunction(MaxInt, int, int:g, int:h)
 defineFunction(ScaledRUB, int, float:value_rub)
 {
 	Date_GetCurrentDate_DMY(day, month, year);
-	value_change_rub = INFLATION_RUB ^ (year - START_YEAR);
+	exponent = year - START_YEAR;
+	script = 0;
+	Script_Exists("TimeFlow.txt", script);
+	Script_Exists("x2.txt", script);
+	if(script ? 1)
+	{
+		exponent = exponent * 2;
+	}
+	script = 0;
+	Script_Exists("TimeFlow2.txt", script);
+	Script_Exists("x4.txt", script);
+	if(script ? 1)
+	{
+		exponent = exponent * 4;
+	}
+	value_change_rub = INFLATION_RUB ^ exponent;
 	money = value_rub * value_change_rub;
 	return(money);
 }
@@ -87,7 +104,22 @@ defineFunction(ScaledRUB, int, float:value_rub)
 defineFunction(ScaledUSD, int, float:value_usd)
 {
 	Date_GetCurrentDate_DMY(day, month, year);
-	value_change_usd = INFLATION_USD ^ (year - START_YEAR);
+	exponent = year - START_YEAR;
+	script = 0;
+	Script_Exists("TimeFlow.txt", script);
+	Script_Exists("x2.txt", script);
+	if(script ? 1)
+	{
+		exponent = exponent * 2;
+	}
+	script = 0;
+	Script_Exists("TimeFlow2.txt", script);
+	Script_Exists("x4.txt", script);
+	if(script ? 1)
+	{
+		exponent = exponent * 4;
+	}
+	value_change_usd = INFLATION_USD ^ exponent;
 	money = value_usd * value_change_usd;
 	return(money);
 }
