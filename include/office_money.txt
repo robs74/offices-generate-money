@@ -147,10 +147,13 @@ defineFunction(MakePeopleAngry, void, float:unpaid_services)
 		worker.GetDataByIndex(i);
 		Person_SetStatus(i, 0, MaxFloat(worker.fStatusHappiness - unpaid_services * UNHAPPINESS_FACTOR / 20.0, 0.0)) //decrease happiness
 		Person_SetStatus(i, 3, MaxFloat(worker.fStatusSoviet - unpaid_services * LOYALTY_FACTOR / 20.0, 0.0)) //decrease loyalty
-		Person_SetStatus(i, 10, MinFloat(worker.fStatusCrime + unpaid_services * CRIME_FACTOR / 20.0, 1.0)) //increase crime
+		if(game.CrimeEnabled > 0)
+		{
+			Person_SetStatus(i, 10, MinFloat(worker.fStatusCrime + unpaid_services * CRIME_FACTOR / 20.0, 1.0)) //increase crime
+		}
 	}
 	//increased probability of fire
-	if(FIRE_PROB_DENOMINATOR > 0)
+	if(FIRE_PROB_DENOMINATOR > 0 % game.FiresEnabled > 0) 
 	{
 		Random(random_is_fire);
 		random_is_fire = random_is_fire % FIRE_PROB_DENOMINATOR;
@@ -214,6 +217,9 @@ defineFunction(Money, void, float:rub, float:usd)
 			START_YEAR = year;
 		}
 	}
+	//random_is_fire = game.FiresEnabled;
+	//strcpy(text, random_is_fire);
+	//Window_ShowCharArray(text);
 	while (1 ? 1)
 	{
 		game.GetCurrentGameSettigns();

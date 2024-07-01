@@ -196,6 +196,9 @@ defineInstruction(Script_StartNew, 1016, string);
 // check if script with a name exists, input name, output char 0/1
 defineInstruction(Script_Exists, 1032, string, char);
 
+// out - exists 0/1
+defineInstruction(ActiveScenario_Exists, 1205, char);
+
 // how many script instructions are executed per second <1, 50000>
 defineInstruction(Script_SetUpdateFrequency, 1017, int);
 defineInstruction(Script_GetUpdateFrequency, 1029, int);
@@ -254,6 +257,7 @@ defineInstruction(Objectives_CreateNewString, 1020, string, string);
 defineInstruction(Objectives_CreateNewLangID, 1021, string, int);
 
 // input: identifier, required value, image file name
+// no value - display amount only; >0 - distplay x/x; <0 - x.f/x.f; <0.01 - no numbers, only image
 defineInstruction(Objective_AddRequirement, 1022, string, float, string);
 
 // input: identifier, index, value
@@ -269,6 +273,9 @@ defineInstruction(Objective_UpdateRequirementToTarget, 1027, string, int);
 defineInstruction(Objective_SetComplete, 1028, string);
 // remove by identifier
 defineInstruction(Objective_Remove, 1030, string);
+
+// in inidentifier, out 0/1
+defineInstruction(Objective_Exist, 1138, string, int);
 
 // deletes all objectives
 // note: objectives all global and shared between all scritps
@@ -476,26 +483,46 @@ defineInstruction(Scenario_ObjectiveClearAll, 1071);
 
 // only for official scenarios
 defineInstruction(Scenario_UnlockNextScenarios, 1083);
+defineInstruction(Scenario_GetNumberOfRemainingScenarios, 1206, int);
 
 // in - user input iden (get form controls.ini), output 0/1
 defineInstruction(Scenario_GetUserInput, 1075, string, int);
+
+// out - does user have default controls
+defineInstruction(Scenario_AreUserControlsDefault, 1136, int);
+
+// out - does user have default controls, in - ident
+defineInstruction(Scenario_IsUserControlDefault, 1137, string, int);
 
 // out - mouse x, y
 defineInstruction(Scenario_GetMousePosition, 1077, int, int);
 
 // in - building index, vehicle ident; similar to purchase vehicle via purchase window; does not substract money
 defineInstruction(Scenario_AddRoadVehicleToBuilding, 1124, int, string);
+// in - vehicle ident, not limited to road vehicles
 defineInstruction(Scenario_AddRoadVehicleBlueprint, 1125, string);
 defineInstruction(Scenario_RemoveRoadVehicleBlueprint, 1126, string);
 defineInstruction(Scenario_UnlockResearch, 1127, string);
 
 // in - building id, in - type ident
 defineInstruction(Scenario_OrderAirplaneToBuilding, 1129, int, string);
+defineInstruction(Scenario_OrderHelicopterToBuilding, 1139, int, string);
 
 defineInstruction(Scenario_GetTourismTripRatingSoviet, 1130, float);
 defineInstruction(Scenario_GetTourismTripRatingWest, 1131, float);
 
 defineInstruction(Scenario_FollowCameraOnVehicle, 1133, int);
+
+
+// persistent scenario objectives
+// in - lang id
+defineInstruction(ScenarioPersistent_SetName, 1207, int);
+// in - current, target, name id
+defineInstruction(ScenarioPersistent_AddRequirement, 1208, float, float, int);
+defineInstruction(ScenarioPersistent_UpdateRequirement, 1211, float, int);
+// in - id
+defineInstruction(ScenarioPersistent_RemoveRequirement, 1209, int);
+defineInstruction(ScenarioPersistent_ClearAll, 1210);
 
 
 //////////////////
@@ -521,8 +548,6 @@ defineInstruction(Research_GetIncompletByIndex, 1120, int, char[]);
 defineInstruction(Research_GetUniversityType, 1121, char[], int);
 
 
-
-
 //////////////////
 // global events
 
@@ -536,31 +561,6 @@ defineInstruction(GlobalEvent_StartEarthquake, 1132, float, float, vec3);
 defineInstruction(GlobalEvent_Exists, 1134, int, int);
 defineInstruction(GlobalEvent_EarthquakePreparing, 1135, int);
 
-
-//////////////////////////////////////////
-//////////////////////////////////////////
-// following instructions are used to manage scripted windows
-//////////////////////////////////////////
-//////////////////////////////////////////
-
-
-// THESE ARE NOT IMPLEMENTED YET !!!!
-
-// in - custom tag that will serve as identifier for this window; if a window with this tag exists, new window will not be created
-defineInstruction(Window_Create, 1200, string);
-
-// in - tag, in - caption
-defineInstruction(Window_SetCaption, 1201, string, string);
-
-// in - tag, filename, pos, size
-defineInstruction(Window_CreateImage, 1202, string, string, vec2, vec2);
-
-// in - tag, image filename, pos, size, comment on mouse hover
-defineInstruction(Window_CreateImageButton, 1203, string, string, vec2, vec2, string);
-
-
-// in tag, out 0/1
-defineInstruction(Window_Exists, 1204, string, char);
 
 ///////////////////////////////////////////////////////////////
 // string instructions
@@ -591,6 +591,30 @@ defineInstruction(Window_ShowCharArray, 2007, char[]);
 
 defineInstruction(atoi, 2008, char[], int);
 defineInstruction(atof, 2009, char[], float);
+
+defineInstruction(debugKey1Pressed, 3003, char);
+defineInstruction(debugKey2Pressed, 3004, char);
+defineInstruction(debugKey3Pressed, 3005, char);
+
+defineVariable(char, __IsDebugKey_Func_HlpVar_);
+
+defineFunction(IsDebugKey1Pressed, char)
+{
+	debugKey1Pressed(__IsDebugKey_Func_HlpVar_);
+	return(__IsDebugKey_Func_HlpVar_);
+}
+
+defineFunction(IsDebugKey2Pressed, char)
+{
+	debugKey2Pressed(__IsDebugKey_Func_HlpVar_);
+	return(__IsDebugKey_Func_HlpVar_);
+}
+
+defineFunction(IsDebugKey3Pressed, char)
+{
+	debugKey3Pressed(__IsDebugKey_Func_HlpVar_);
+	return(__IsDebugKey_Func_HlpVar_);
+}
 
 //////////////////////////////////////////
 // Current Game Settings
@@ -728,6 +752,17 @@ defineStruct(Building, 100)
 	
 	defineStructVariable(Building, int, nAttractionType);
 	
+	defineStructVariable(Building, int, nResidentialIsCiv);
+	
+	defineStructVariable(Building, int, nHeatingConnections);
+	defineStructVariable(Building, int, nElectricConnections);
+	defineStructVariable(Building, int, nWasteConnections);
+	
+	defineStructVariable(Building, int, nRailDistributionWagonsNum);
+	
+	defineStructVariable(Building, int, nCablewayPairBuildingIndex);
+	defineStructVariable(Building, char, bCablewayOn);
+	
 }
 
 
@@ -803,6 +838,17 @@ defineInstruction(Building_GetTargetNumForFirestations, 11026, int, int);
 // in - index in list, out - index building index
 defineInstruction(Building_GetPathsBuildingIndex, 11027, int, int);
 
+// in - index in list, out - number of sources
+defineInstruction(Building_IsConnectedToEelctricSource, 11028, int, int);
+defineInstruction(Building_IsConnectedToHeatSource, 11029, int, int);
+defineInstruction(Building_IsConnectedToSewage, 11031, int, int);
+
+// in - building index, wagon index, out - wagon index in list
+defineInstruction(Building_GetRailDistributionWagonID, 11030, int, int, int);
+
+// in - building index; out - number
+defineInstruction(Building_GetNumberOfHeliports, 11032, int, int);
+
 
 
 //////////////////////////////////////////
@@ -858,6 +904,8 @@ defineStruct(Vehicle, 101)
 	defineStructVariable(Vehicle, char, bDisableSell);
 	defineStructArray(Vehicle, char[128], sIdent);
 	defineStructVariable(Vehicle, char, bBrandNew);
+	
+	defineStructVariable(Vehicle, int, nMovementStationDescription);
 }
 
 //functions
@@ -1123,6 +1171,7 @@ defineStruct(Resources, 104)
 	defineStructInstruction(Resources, GetConstructionCostFromBuilding, 50025, int);
 	
 	defineStructInstruction(Resources, GetFromVehicleEntireTrainAndContainers, 50026, int);
+	defineStructInstruction(Resources, GetCapacityFromVehicleEntireTrainAndContainers, 50027, int);
 	
 	// in tag, out success/fail
 	
@@ -1140,7 +1189,15 @@ defineStruct(Resources, 104)
 	
 	defineStructInstruction(Resources, GetValueMaxFromBuildingByTag, 50019, string);
 	
+	// by tag end
+	
 	defineStructInstruction(Resources, ResetAmounts, 50004);
+	
+	defineStructInstruction(Resources, GetFromStationDescriptionLoad, 50028, int, int);
+	defineStructInstruction(Resources, GetFromStationDescriptionUnload, 50029, int, int);
+	
+	defineStructInstruction(Resources, GetFromVehicleStationDescriptionLoad, 50030, int, int);
+	defineStructInstruction(Resources, GetFromVehicleStationDescriptionUnload, 50031, int, int);
 }
 
 //functions
@@ -1254,12 +1311,17 @@ defineStruct(StatRecord, 105)
 	// 0-365, day year
 	defineStructInstruction(StatRecord, GetFromDateToDate_D365Y, 60004, int, int, int, int);
 	
+	defineStructInstruction(StatRecord, GetSpecificIndex, 60006, int);
+	
 	
 	
 	// get stats for namepoint
 	// first input param - namepoint id
 	defineStructInstruction(StatRecord, GetPresentForNamePoint, 60005, int);
 }
+
+// exclude current
+defineInstruction(StatRecord_GetNumberOfRecords, 61000, int);
 
 
 //////////////////////////////////////////
@@ -1312,6 +1374,13 @@ defineStruct(Road, 106)
 	defineStructVariable(Road, char, bFundedUSD);
 	
 	defineStructVariable(Road, int, nType);
+	defineStructVariable(Road, char, bHasElectricity);
+	
+	defineStructVariable(Road, int, nHub0BuildingIndex);
+	defineStructVariable(Road, int, nHub1BuildingIndex);
+	
+	defineStructVariable(Road, int, nHub0BuildingConnectionIndex);
+	defineStructVariable(Road, int, nHub1BuildingConnectionIndex);
 }
 
 //functions
@@ -1460,6 +1529,8 @@ defineStruct(StationDescription, 109)
 {
 	defineStructInstruction(StationDescription, GetDataLoadFromBuilding, 100000, int, int);   // get data by building index and station index
 	defineStructInstruction(StationDescription, GetDataUnloadFromBuilding, 100001, int, int);   // get data by building index and station index
+	defineStructInstruction(StationDescription, GetDataLoadFromVehicle, 100002, int, int);   // get data by vehicle index and station index
+	defineStructInstruction(StationDescription, GetDataUnloadFromVehicle, 100003, int, int);   // get data by vehicle index and station index
 	
 	defineStructVariable(StationDescription, int, nValidRead);
 	
@@ -1551,6 +1622,44 @@ defineStruct(Runway, 111)
 ///////////////////////////
 
 defineInstruction(Runway_GetNumberOfRunways, 111100, int);
+
+
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+// Vehicle Types
+//////////////////////////////////////////
+//////////////////////////////////////////
+
+//data struct
+///////////////////////////
+defineStruct(VehicleTypes, 112)
+{
+	defineStructInstruction(VehicleTypes, GetDataByName, 112000, string);
+	defineStructInstruction(VehicleTypes, GetDataByIndex, 112001, int);
+	
+	defineStructVariable(VehicleTypes, int, nValidRead);
+	
+	defineStructArray(VehicleTypes, char[128], Identifier);
+	defineStructVariable(VehicleTypes, int, nVehicleType);			// VEHICLETYPE
+	defineStructArray(VehicleTypes, int[3], nSkill);				// VEHICLESKILL
+	
+	defineStructVariable(VehicleTypes, int, nCostUSD);
+	defineStructVariable(VehicleTypes, int, nCostRUB);
+	
+	defineStructVariable(VehicleTypes, int, nResourceType);			// RESOURCE_TRANSPORT_TYPE
+	defineStructVariable(VehicleTypes, float, fResourceCapacity);
+	
+	defineStructVariable(VehicleTypes, char, bBlueprintPurchased);
+	defineStructVariable(VehicleTypes, int, nBrandNewSoldForRUB);
+	defineStructVariable(VehicleTypes, int, nBrandNewSoldForUSD);
+	defineStructVariable(VehicleTypes, int, nBuiltInProductionLine);
+}
+
+//functions
+///////////////////////////
+
+defineInstruction(VehicleTypes_GetNumOfActiveTypes, 112101, int);
 
 
 
