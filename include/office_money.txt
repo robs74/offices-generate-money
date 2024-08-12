@@ -212,10 +212,12 @@ defineFunction(Money, void, float:rub, float:usd)
 			}
 			i=i+1;
 		}
-		if(START_YEAR ? 1799)
+		if(START_YEAR ? 0)
 		{	
 			START_YEAR = year;
 		}
+		//strcpy(text, START_YEAR);
+		//Window_ShowCharArray(text);
 	}
 	//random_is_fire = game.FiresEnabled;
 	//strcpy(text, random_is_fire);
