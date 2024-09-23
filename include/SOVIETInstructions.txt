@@ -961,6 +961,58 @@ defineInstruction(Vehicle_SetCanSell, 21018, int, int);
 // can airplane go from building 1 to building 2
 defineInstruction(Vehicle_CheckAirplaneConnection, 21019, int, int, int, int, float, int);
 
+// in - vehicle id, string - group id, out - 1/0
+// "bus"
+// "vagon_cargo"
+// "vagon_pasanger"
+// "locomotive_diesel"
+// "locomotive_eletric"
+// "covered"
+// "open"
+// "dumper"
+// "oiltank"
+// "cementtank"
+// "refrigeration"
+// "tram"
+// "trainset"
+// "harvesting"
+// "seeding"
+// "exvacator"
+// "bulldozer"
+// "paver"
+// "roller"
+// "wood"
+// "roadcrane"
+// "towercrane"
+// "livestock"
+// "mixer"
+// "trackbuilder"
+// "firetruck"
+// "personal"
+// "fireladder"
+// "ambulance"
+// "motorvagon"
+// "trolleybus"
+// "cabins_cargo"
+// "cabins_passanger"
+// "ships_cargo"
+// "ships_passanger"
+// "forklifts"
+// "snowplows"
+// "airpassenger"
+// "aircargo"
+// "helipassenger"
+// "helicargo"
+// "police"
+// "policebus"
+// "containers"
+// "water"
+// "sewage"
+// "waste"
+// "trainbox"
+// "metro"
+defineInstruction(Vehicle_IsPartOfGroup, 21020, int, string, int);
+
 
 //////////////////////////////////////////
 //////////////////////////////////////////
@@ -1198,13 +1250,46 @@ defineStruct(Resources, 104)
 	
 	defineStructInstruction(Resources, GetFromVehicleStationDescriptionLoad, 50030, int, int);
 	defineStructInstruction(Resources, GetFromVehicleStationDescriptionUnload, 50031, int, int);
+	
+	// trade
+	
+	defineStructInstruction(Resources, GetTradeCostRUB, 50032);
+	defineStructInstruction(Resources, GetTradeCostUSD, 50033);
+	
+	defineStructInstruction(Resources, GetTradeCostRUB_Sell, 50034);
+	defineStructInstruction(Resources, GetTradeCostUSD_Sell, 50035);
+	
+	defineStructInstruction(Resources, GetTradeCostRUB_SellFactor, 50036);
+	defineStructInstruction(Resources, GetTradeCostUSD_SellFactor, 50037);
+	
+	defineStructInstruction(Resources, GetTradeCostRUB_PurchaseFactor, 50038);
+	defineStructInstruction(Resources, GetTradeCostUSD_PurchaseFactor, 50039);
 }
 
 //functions
 ///////////////////////////
 
+// in resource indentifier, in value
+defineInstruction(Resources_SetCostRUB, 51001, string, float);
+defineInstruction(Resources_SetCostUSD, 51002, string, float);
+
+defineInstruction(Resources_SetCostRUB_Sell, 51003, string, float);
+defineInstruction(Resources_SetCostUSD_Sell, 51004, string, float);
+
+defineInstruction(Resources_SetCostRUB_SellFactor, 51005, string, float);
+defineInstruction(Resources_SetCostUSD_SellFactor, 51006, string, float);
+
+defineInstruction(Resources_SetCostRUB_PurchaseFactor, 51007, string, float);
+defineInstruction(Resources_SetCostUSD_PurchaseFactor, 51008, string, float);
 
 
+
+
+//////////////////////////////////////////
+//////////////////////////////////////////
+// StatRecord
+//////////////////////////////////////////
+//////////////////////////////////////////
 
 defineStruct(StatRecord, 105)
 {

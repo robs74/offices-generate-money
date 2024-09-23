@@ -2,7 +2,7 @@ include("settings.txt");
 defineVariable(int, day);
 defineVariable(int, month);
 defineVariable(int, year);
-defineVariable(int, money);
+defineVariable(float, money);
 defineVariable(float, max);
 defineVariable(float, min);
 defineVariable(int, imax);
@@ -10,6 +10,9 @@ defineVariable(float, exponent);
 defineVariable(float, value_change_rub);
 defineVariable(float, value_change_usd);
 defineVariable(char, script);
+defineVariable(Resources, resources);
+defineVariable(float, stone_price_rub);
+defineVariable(float, stone_price_usd);
 
 defineFunction(Clamp, float, float:x, float:y, float:z)
 {
@@ -78,9 +81,9 @@ defineFunction(MaxInt, int, int:g, int:h)
 	return(imax);
 }
 
-defineFunction(ScaledRUB, int, float:value_rub)
+defineFunction(ScaledRUB, float, float:value_rub)
 {
-	Date_GetCurrentDate_DMY(day, month, year);
+/* 	Date_GetCurrentDate_DMY(day, month, year);
 	exponent = year - START_YEAR;
 	script = 0;
 	Script_Exists("TimeFlow.txt", script);
@@ -98,12 +101,17 @@ defineFunction(ScaledRUB, int, float:value_rub)
 	}
 	value_change_rub = INFLATION_RUB ^ exponent;
 	money = value_rub * value_change_rub;
+	return(money); */
+	resources.ResetAmounts();
+	resources.GetTradeCostRUB();
+	stone_price_rub = resources.rawgravel;
+	money = value_rub * stone_price_rub / 3.96;
 	return(money);
 }
 
-defineFunction(ScaledUSD, int, float:value_usd)
+defineFunction(ScaledUSD, float, float:value_usd)
 {
-	Date_GetCurrentDate_DMY(day, month, year);
+/* 	Date_GetCurrentDate_DMY(day, month, year);
 	exponent = year - START_YEAR;
 	script = 0;
 	Script_Exists("TimeFlow.txt", script);
@@ -120,7 +128,11 @@ defineFunction(ScaledUSD, int, float:value_usd)
 		exponent = exponent * 4;
 	}
 	value_change_usd = INFLATION_USD ^ exponent;
-	money = value_usd * value_change_usd;
+	money = value_usd * value_change_usd; */
+	resources.ResetAmounts();
+	resources.GetTradeCostUSD();
+	stone_price_usd = resources.rawgravel;
+	money = value_usd * stone_price_usd / 4.86;
 	return(money);
 }
 
