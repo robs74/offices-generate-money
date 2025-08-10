@@ -266,28 +266,35 @@ defineFunction(Money, void, float:rub, float:usd)
 				}
 				rub_sum2 = rub_sum2 + money_rub_add;
 				usd_sum2 = usd_sum2 + money_usd_add;
-				Objective_Remove("services");
-				Objective_Remove("service_price");
-				Objective_Remove("services_balance");
+				//Objective_Remove("services");
+				//Objective_Remove("service_price");
+				//Objective_Remove("services_balance");
 				Window_GetLastWindow(window_id);
 				if(window_id ? -1)
 				{
 					clicked_object_id = -1;
+					Objective_Remove("services");
+					Objective_Remove("service_price");
+					Objective_Remove("services_balance");
 				}
 				else()
 				{
 					window.GetDataByIndex(window_id);
 					if (window.nValidRead)
 					{
-						if (window.nReferenceObjectType ? SOVIET_OBJECT_BUILDING & !(clicked_object_id ? window.nRefObjectIndex))
+						if (!(clicked_object_id ? window.nRefObjectIndex))
 						{
 							clicked_object_id = window.nRefObjectIndex;
+							Objective_Remove("services");
+							Objective_Remove("service_price");
+							Objective_Remove("services_balance");
 							if(window.nReferenceObjectType ? SOVIET_OBJECT_BUILDING)
 							{
 								building.GetDataByIndex(clicked_object_id);
 								Scenario_WindowExists(window_exists);
 								if(building.nType ? BUILDINGTYPE_CITYHALL & building.fPercFinished > 0.9999 & ! (building.nSubType ? BUILDINGSUBTYPE_ROAD) & !window_exists)
 								{
+									/*
 									strcpy(text, "");
 									
 									strcat(text, "Services produced: ");
@@ -314,6 +321,23 @@ defineFunction(Money, void, float:rub, float:usd)
 									strcat(text, usd_sum);
 									
 									Scenario_WindowWithImageLeft("Services overview", text, "services_icon.png", 2);
+									*/
+									
+									Objectives_CreateNewString("services", "Services");
+									Objective_AddRequirement("services", demand * 1.0, "services_icon.png");
+									Objective_UpdateRequirement("services", 0, supply * 1.0);
+									
+									Objectives_CreateNewString("service_price", "Current service price");
+									Objective_AddRequirement("service_price", 0.0, "editor/currency_ruble.png");
+									Objective_UpdateRequirement("service_price", 0, current_price_rub);
+									Objective_AddRequirement("service_price", 0.0, "editor/currency_dollar.png");
+									Objective_UpdateRequirement("service_price", 1, current_price_usd);
+									
+									Objectives_CreateNewString("services_balance", "Daily services balance");
+									Objective_AddRequirement("services_balance", 0.0, "editor/currency_ruble.png");
+									Objective_UpdateRequirement("services_balance", 0, rub_sum * 1.0);
+									Objective_AddRequirement("services_balance", 0.0, "editor/currency_dollar.png");
+									Objective_UpdateRequirement("services_balance", 1, usd_sum * 1.0);
 								}
 							}
 						}
